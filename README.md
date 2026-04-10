@@ -1,3 +1,5 @@
+[English](README.md) | [简体中文](README_CN.md)
+
 # 🐾 Z-Core
 
 **Agent Runtime Middleware — shared memory, context management, and skill orchestration for AI agents.**
