@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zcore"
+version = "0.2.0"
+description = "Z-Core — Agent runtime middleware for shared memory, context management, and skill orchestration"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = []
+keywords = ["ai", "agent", "cli", "runtime", "memory", "orchestration", "skills"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+
+[project.scripts]
+zcore = "zcore.cli.main:main"
+
+[project.optional-dependencies]
+dev = ["build>=1.2.0", "pytest>=9.0.0", "twine>=6.0.0"]
+test = ["pytest>=9.0.0"]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["zcore*"]
+
+[tool.setuptools.package-data]
+"zcore.prompts" = ["*.md"]
