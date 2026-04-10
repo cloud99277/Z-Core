@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-≥3.11-blue?style=flat-square)](https://python.org)
 [![Dependencies](https://img.shields.io/badge/外部依赖-0-green?style=flat-square)](#)
-[![Tests](https://img.shields.io/badge/测试-39%2F39-brightgreen?style=flat-square)](#测试)
+[![Tests](https://img.shields.io/badge/测试-39%20通过-brightgreen?style=flat-square)](#测试)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ---
@@ -44,26 +44,133 @@ pip install -e .
 # 初始化运行时
 zcore init
 
+# 自动配置你的 Agent（Claude、Gemini、Codex）
+zcore setup all
+
 # 检查系统健康状态
 zcore doctor --json
 ```
 
-### 典型工作流
+完成 — 你的 Agent 现在已经自动学会使用 Z-Core 了。
+
+---
+
+## Agent 自动配置
+
+`zcore setup` 会自动将 Z-Core 的使用指令注入到 Agent 的配置文件中，让它们自动学会使用会话、记忆和上下文管理。
 
 ```bash
-# 1. 开始会话
-zcore session start --project my-app --agent claude --json
+# 检测已安装的 Agent
+zcore setup detect --json
+# → claude: detected=true, gemini: detected=true, codex: detected=false
 
-# 2. 工作过程中随时查询记忆
-zcore memory search --query "架构决策" --json
+# 配置单个 Agent
+zcore setup claude
 
-# 3. 上下文过长时分析并压缩
-zcore context analyze --input messages.json --model sonnet --json
-zcore compact --input messages.json --model sonnet --json
+# 一次配置所有检测到的 Agent
+zcore setup all
 
-# 4. 结束会话（自动提取记忆 + 保存快照）
-zcore session end --session-id <id> --messages messages.json --json
+# 预览变更但不修改
+zcore setup claude --dry-run
 ```
+
+执行后，会在 Agent 配置文件（如 `~/.claude/CLAUDE.md`）中**幂等注入**一个托管标记块：
+
+```markdown
+<!-- ZCORE:START (managed by zcore setup, do not edit manually) -->
+## Z-Core Runtime Integration
+
+- 开始新任务时：`zcore session start --project <project> --agent <agent> --json`
+- 完成任务后：`zcore session end --session-id <id> --json`
+- 搜索记忆：`zcore memory search --query "<query>" --json`
+- 上下文分析：`zcore context analyze --model <model> --input <file> --json`
+- 执行 skill：`zcore run <skill-name> [--args] --json`
+- 所有 zcore 命令都加 `--json` 获取结构化输出
+<!-- ZCORE:END -->
+```
+
+**安全保障：**
+- **幂等性** — 重复执行不会重复注入
+- **自动备份** — 修改前自动创建 `.bak` 文件
+- **`--dry-run`** — 预览变更但不实际修改
+- **不破坏原有内容** — 只操作标记块内的内容
+
+---
+
+## 新手上手（5 分钟走通）
+
+### 1. 开始会话
+
+```bash
+zcore session start --project my-app --agent claude
+# → Session started: 802718d8b3f4
+```
+
+### 2. 从对话中提取记忆
+
+将对话保存为 `messages.json`，然后提取决策和事实：
+
+```bash
+zcore memory extract --input messages.json --model sonnet --project my-app
+# → Extracted 4 entries (0 admitted, 3 pending, 1 discarded)
+```
+
+Z-Core 的置信度分流机制：
+- **>0.8** — 自动入库
+- **0.5–0.8** — 放入 pending 待人工确认
+- **<0.5** — 丢弃
+
+### 3. 确认待审记忆
+
+```bash
+# 查看待确认的记忆
+zcore memory pending
+# → 520f4bf2: [decision] 使用 FastAPI，支持自动 OpenAPI 文档
+# → bfb2d778: [decision] 使用 PostgreSQL + SQLAlchemy ORM
+
+# 确认一条
+zcore memory pending --confirm 520f4bf2
+```
+
+### 4. 跨会话搜索记忆
+
+```bash
+zcore memory search --query "数据库" --json
+```
+
+### 5. 结束会话（自动保存一切）
+
+```bash
+zcore session end --session-id 802718d8b3f4 --messages messages.json
+# → Session ended: 802718d8b3f4
+# → 自动保存：上下文快照 + 提取的记忆 + 摘要
+```
+
+### 6. 暂停 / 恢复 / 交接
+
+```bash
+# 暂停但不结束
+zcore session pause
+# → Session paused: 802718d8b3f4
+
+# 稍后恢复
+zcore session resume
+# → Session resumed: 802718d8b3f4
+
+# 交接给另一个 Agent
+zcore session handoff --session-id <id> --to gemini --note "请继续实现认证模块"
+```
+
+### 可选：启用 Ghost Agent
+
+Ghost Agent 提供 LLM 驱动的压缩和提取。不启用也完全可用（自动降级为启发式模式）。
+
+```bash
+zcore config set llm_backend.enabled true
+export KITCLAW_LLM_API_KEY="your-api-key"
+```
+
+> 📖 完整引导教程：[docs/getting-started.md](docs/getting-started.md)
 
 ---
 
@@ -205,7 +312,7 @@ zcore migrate [--dry-run] [--json]   # 从 v1 迁移数据
 ## 测试
 
 ```bash
-# 运行全部 39 个测试
+# 运行完整测试套件
 python -m unittest discover tests -v
 
 # 快速验证
@@ -318,6 +425,7 @@ export KITCLAW_LLM_API_KEY="your-api-key"
 
 | 文档 | 内容 |
 |------|------|
+| **[新手上手指南](docs/getting-started.md)** | **10 分钟完整引导，含真实命令输出** |
 | [整体架构](v2/design/architecture.md) | 9 引擎设计、依赖关系图、配置 schema |
 | [CLI 设计](v2/design/cli.md) | 命令接口规格 |
 | [上下文引擎](v2/design/context-engine.md) | Token 分析与压缩 |
@@ -330,12 +438,9 @@ export KITCLAW_LLM_API_KEY="your-api-key"
 
 ---
 
-## 与 KitClaw 的关系
+## 项目来源
 
-Z-Core 原为 [KitClaw](https://github.com/cloud99277/KitClaw) V2 开发，经过 7 个 Phase（Phase 0-6）的迭代后，已作为独立项目提取。
-
-- **KitClaw**：平台层 — 17 个核心技能 + RAG 引擎 + 治理框架
-- **Z-Core**：运行时层 — Agent 中间件，为 KitClaw 和其他技能系统提供底层能力
+Z-Core 最初来自 [KitClaw](https://github.com/cloud99277/KitClaw) 的 V2 运行时抽离，现已作为独立仓库维护与发布。
 
 两者可独立使用，也可配合运行。
 

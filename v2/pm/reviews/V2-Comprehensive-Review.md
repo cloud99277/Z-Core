@@ -1,4 +1,4 @@
-# KitClaw V2 综合审查报告
+# Z-Core V2 综合审查报告
 
 **审查者**：Antigravity (Claude Opus 4.6 Thinking)  
 **审查日期**：2026-04-11  
@@ -151,13 +151,13 @@ WorkflowEngine  → discover/validate/run
 
 | 设计文档 | 实现状态 | 偏差 |
 |---------|---------|------|
-| [architecture.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/design/architecture.md) | ✅ 9 Engine 全部落地 | 无重大偏差 |
-| [cli.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/design/cli.md) | ✅ 35/35 命令 | 实现用 argparse 而非设计中的 Click |
-| [context-engine.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/design/context-engine.md) | ✅ 完整实现 | 无偏差 |
-| [memory-engine.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/design/memory-engine.md) | ✅ 核心完整 | Embedding 去重延期到 V3 |
-| [session-manager.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/design/session-manager.md) | ✅ 完整实现 | 无偏差 |
-| [skill-router.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/design/skill-router.md) | ✅ 三层路由 | YAML 编排改为 TOML |
-| [governance.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/design/governance.md) | ✅ 权限+hooks | 零信任签名延期到 V3 |
+| [architecture.md](../../design/architecture.md) | ✅ 9 Engine 全部落地 | 无重大偏差 |
+| [cli.md](../../design/cli.md) | ✅ 35/35 命令 | 实现用 argparse 而非设计中的 Click |
+| [context-engine.md](../../design/context-engine.md) | ✅ 完整实现 | 无偏差 |
+| [memory-engine.md](../../design/memory-engine.md) | ✅ 核心完整 | Embedding 去重延期到 V3 |
+| [session-manager.md](../../design/session-manager.md) | ✅ 完整实现 | 无偏差 |
+| [skill-router.md](../../design/skill-router.md) | ✅ 三层路由 | YAML 编排改为 TOML |
+| [governance.md](../../design/governance.md) | ✅ 权限+hooks | 零信任签名延期到 V3 |
 
 ### 2. 设计文档一致性问题
 
@@ -182,7 +182,7 @@ WorkflowEngine  → discover/validate/run
 - PM reviews 只列出到 Phase 2（实际有 Phase 0-6 全部 7 个审查报告）
 
 **W4: `pyproject.toml` description 过时**
-- 当前 description: `"KitClaw V2 runtime middleware skeleton"`
+- 当前 description: `"Z-Core runtime middleware"`
 - 对于已完成的 V2 来说，"skeleton" 用词不当
 
 ---
@@ -193,11 +193,11 @@ WorkflowEngine  → discover/validate/run
 
 | PM 文件 | 状态 | 评价 |
 |---------|------|------|
-| [Current-State.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/pm/Current-State.md) | ✅ 最新 | 所有 6 个 Phase 成功标准已勾选，明确延期项清晰 |
-| [Sprint-Backlog.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/pm/Sprint-Backlog.md) | ✅ 最新 | M1-M4 全部 ✅，前置依赖清晰 |
-| [Decision-Log.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/pm/Decision-Log.md) | ✅ 完整 | 从 Phase 0 到 Phase 6 的关键决策全部记录 |
-| [Changelog.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/pm/Changelog.md) | ✅ 详尽 | 每日交付事项逐条记录 |
-| [sprint-status.md](file:///Ubuntu/home/yangyy/projects/kitclaw/v2/pm/sprint-status.md) | ✅ 存在 | 作为活跃协调文件，状态准确 |
+| [Current-State.md](../Current-State.md) | ✅ 最新 | 所有 6 个 Phase 成功标准已勾选，明确延期项清晰 |
+| [Sprint-Backlog.md](../Sprint-Backlog.md) | ✅ 最新 | M1-M4 全部 ✅，前置依赖清晰 |
+| [Decision-Log.md](../Decision-Log.md) | ✅ 完整 | 从 Phase 0 到 Phase 6 的关键决策全部记录 |
+| [Changelog.md](../Changelog.md) | ✅ 详尽 | 每日交付事项逐条记录 |
+| [sprint-status.md](../sprint-status.md) | ✅ 存在 | 作为活跃协调文件，状态准确 |
 
 ### 2. 审查报告体系 ✅ 完整
 
@@ -296,7 +296,7 @@ Ran 39 tests in 7.146s — OK
 
 ### 整体评价
 
-KitClaw V2 从零开始，经过 7 个 Phase 的迭代，交付了一个 **功能完整、零外部依赖、测试全绿** 的 Agent 运行时中间件。代码质量整体优秀，架构一致性好，PM 管理体系规范。
+Z-Core V2 从零开始，经过 7 个 Phase 的迭代，交付了一个 **功能完整、零外部依赖、测试全绿** 的 Agent 运行时中间件。代码质量整体优秀，架构一致性好，PM 管理体系规范。
 
 ### 关键亮点
 

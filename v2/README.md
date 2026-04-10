@@ -108,14 +108,14 @@ zcore/                              # pip install -e . → CLI 命令 `zcore`
 - v1 代码保持不动，继续可用，**视为只读兼容层**
 - v2 规划在 `v2/` 目录下进行，运行时代码在 `zcore/` 包下
 - 开发在 `feat/v2` 分支上进行
-- 命名冻结：仓库名保持 `KitClaw`，Python package / distribution / CLI 命令统一为 `zcore`
+- 当前独立仓库统一使用 `Z-Core` / `zcore` 命名；历史文档中的 `KitClaw V2` 表述仅代表来源背景
 - v1 的 `~/.ai-memory/` 和 `~/.ai-skills/` 目录由 v2 直接读取，不改造
 
 ## 目标里程碑
 
 | Phase | 内容 | 产物 | 状态 |
 |-------|------|------|:----:|
-| 0 | 统一 CLI 入口 | `zcore` bootstrap skeleton（init/status/doctor/session） | ✅ 完成 |
+| 0 | 统一 CLI 入口 | `zcore` bootstrap（init/status/doctor/session） | ✅ 完成 |
 | 1 | Context Engine + Session 增强 | 对话压缩 + Ghost Agent 真实 API + Session 续接 | ✅ 完成 |
 | 2 | Memory Engine 升级 | 自动记忆提取 + 去重 + 主题文件 | ✅ 完成 |
 | 3 | Skill Router + Governance | 三层路由 + 权限引擎 + Hook 框架 | ✅ 完成 |

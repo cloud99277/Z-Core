@@ -468,7 +468,7 @@ Z-Core = Agent 世界的中间件层
 - [ ] `zcore init` — 初始化工作区（创建配置、symlinks、引导 Ghost Agent API key）
 - [ ] `zcore status` — 显示当前状态（记忆数、Ghost Agent 可用性、成本）
 - [ ] `zcore doctor` — 健康检查（依赖、路径、API key、config.toml 权限）
-- [ ] 包结构重组：从 flat scripts → Python package（`pip install kitclaw`）
+- [x] 包结构重组：从 flat scripts → Python package（`pip install zcore` 或 `pip install -e .`）
 - [ ] Ghost Agent 核心模块：`engines/ghost_agent.py`（纯 stdlib urllib API 调用）
 - [ ] Privacy 模块：`utils/privacy.py`（发送前脱敏）
 - [ ] FileLock 模块：`utils/filelock.py`（基于 lockfile 的并发控制）
@@ -585,7 +585,7 @@ Ghost Agent  = 基础设施里的维修机器人（有自己的小脑，不替�
 | 会话存储 | JSON 文件 + gzip | 零依赖，Git 友好 |
 | 编排引擎 | YAML + Python eval | 声明式，可审计 |
 | 项目配置 | `~/.zcore/config.toml` | 比 JSON 更人类友好 |
-| 包分发 | PyPI (`pip install kitclaw`) | Python 标准分发 |
+| 包分发 | PyPI (`pip install zcore`) | Python 标准分发 |
 
 ## 第九部分：商业化变现路线 (Monetization Strategy)
 

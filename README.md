@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-≥3.11-blue?style=flat-square)](https://python.org)
 [![Dependencies](https://img.shields.io/badge/Dependencies-0-green?style=flat-square)](#)
-[![Tests](https://img.shields.io/badge/Tests-39%2F39-brightgreen?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-39%20passing-brightgreen?style=flat-square)](#testing)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 Z-Core is an agent-agnostic runtime middleware that gives your CLI agents (Claude Code, Gemini CLI, Codex CLI, etc.) a shared infrastructure for:
@@ -29,9 +29,129 @@ pip install -e .
 # Initialize runtime
 zcore init
 
+# Auto-configure your agents (Claude, Gemini, Codex)
+zcore setup all
+
 # Check system health
 zcore doctor --json
 ```
+
+That's it — your agents now know how to use Z-Core automatically.
+
+## Agent Auto-Setup
+
+`zcore setup` auto-injects Z-Core instructions into your agent config files so they learn to use sessions, memory, and context management without manual configuration.
+
+```bash
+# Detect which agents are installed
+zcore setup detect --json
+# → claude: detected=true, gemini: detected=true, codex: detected=false
+
+# Configure a specific agent
+zcore setup claude
+
+# Or configure all detected agents at once
+zcore setup all
+
+# Preview changes without modifying files
+zcore setup claude --dry-run
+```
+
+This inserts a managed block into the agent's config file (e.g. `~/.claude/CLAUDE.md`):
+
+```markdown
+<!-- ZCORE:START (managed by zcore setup, do not edit manually) -->
+## Z-Core Runtime Integration
+
+- Start tasks: `zcore session start --project <project> --agent <agent> --json`
+- End tasks: `zcore session end --session-id <id> --json`
+- Search memory: `zcore memory search --query "<query>" --json`
+- Analyze context: `zcore context analyze --model <model> --input <file> --json`
+- Run skills: `zcore run <skill-name> [--args] --json`
+- Always use `--json` for structured output
+<!-- ZCORE:END -->
+```
+
+**Safety guarantees:**
+- **Idempotent** — running setup twice won't duplicate the block
+- **Auto-backup** — creates `.bak` before modifying
+- **`--dry-run`** — preview changes without writing
+- **Non-destructive** — only touches the managed block, your own content stays
+
+## Getting Started (5-Minute Walkthrough)
+
+### 1. Start a Session
+
+```bash
+zcore session start --project my-app --agent claude
+# → Session started: 802718d8b3f4
+```
+
+### 2. Extract Memory from Conversations
+
+Save your conversation as `messages.json`, then extract decisions and facts:
+
+```bash
+zcore memory extract --input messages.json --model sonnet --project my-app
+# → Extracted 4 entries (0 admitted, 3 pending, 1 discarded)
+```
+
+Z-Core uses a confidence-based triage:
+- **>0.8** — auto-admitted to permanent storage
+- **0.5–0.8** — pending human confirmation
+- **<0.5** — discarded
+
+### 3. Confirm Pending Memories
+
+```bash
+# View pending entries
+zcore memory pending
+# → 520f4bf2: [decision] Use FastAPI for auto OpenAPI docs
+# → bfb2d778: [decision] Use PostgreSQL + SQLAlchemy ORM
+
+# Confirm one
+zcore memory pending --confirm 520f4bf2
+```
+
+### 4. Search Memory Across Sessions
+
+```bash
+zcore memory search --query "database" --json
+```
+
+### 5. End Session (Auto-Saves Everything)
+
+```bash
+zcore session end --session-id 802718d8b3f4 --messages messages.json
+# → Session ended: 802718d8b3f4
+# → Auto-saves: context snapshot + extracted memories + summary
+```
+
+### 6. Pause / Resume / Handoff
+
+```bash
+# Pause without ending
+zcore session pause
+# → Session paused: 802718d8b3f4
+
+# Resume later
+zcore session resume
+# → Session resumed: 802718d8b3f4
+
+# Hand off to another agent
+zcore session handoff --session-id <id> --to gemini --note "Continue auth module"
+```
+
+### Optional: Enable Ghost Agent
+
+Ghost Agent provides LLM-powered compaction and extraction. Without it, Z-Core falls back to heuristic mode (still fully functional).
+
+```bash
+zcore config set llm_backend.enabled true
+export KITCLAW_LLM_API_KEY="your-api-key"
+```
+
+> 📖 Full walkthrough: [docs/getting-started.md](docs/getting-started.md)
 
 ## Architecture
 
@@ -129,7 +249,7 @@ zcore migrate [--dry-run] [--json]
 ## Testing
 
 ```bash
-# Run all 39 tests
+# Run the full test suite
 python -m unittest discover tests -v
 
 # Quick check
@@ -149,7 +269,7 @@ Z-Core/
 │   ├── prompts/            # LLM prompt templates
 │   ├── config.py           # TOML config management
 │   └── runtime.py          # RuntimePaths discovery
-├── tests/                  # 39 unit tests (2,573 lines)
+├── tests/                  # Standalone regression suite
 ├── v2/                     # Design documentation
 │   ├── design/             # Architecture & engine specs
 │   ├── pm/                 # Project management
@@ -161,6 +281,7 @@ Z-Core/
 
 ## Documentation
 
+- **[Getting Started Guide](docs/getting-started.md)** — 10-minute walkthrough with real examples
 - [Architecture](v2/design/architecture.md) — 9-engine design, dependency graph, config schema
 - [CLI Design](v2/design/cli.md) — Command interface specification
 - [Context Engine](v2/design/context-engine.md) — Token analysis and compaction
@@ -172,7 +293,7 @@ Z-Core/
 
 ## Origin
 
-Z-Core was developed as KitClaw V2 — the runtime middleware evolution of the [KitClaw](https://github.com/cloud99277/KitClaw) platform. It has been extracted into a standalone project for independent development and distribution.
+Z-Core began as the V2 runtime extraction from the [KitClaw](https://github.com/cloud99277/KitClaw) project and now lives as a standalone repository for independent development and distribution.
 
 ## License
 

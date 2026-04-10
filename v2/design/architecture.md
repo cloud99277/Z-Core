@@ -71,7 +71,7 @@ depends_on: ["rfcs/001-runtime-vs-scripts.md"]
 ## 3. 目录布局
 
 命名冻结：
-- 仓库名保持 `KitClaw`
+- 独立仓库名使用 `Z-Core`
 - v2 Python package / distribution 冻结为 `zcore`
 - CLI 命令冻结为 `zcore`
 - v1 目录保持只读兼容，不在 Phase 0 中改造
@@ -265,7 +265,7 @@ zcore/                          # Python package root
 
 ```bash
 # 或从源码安装（开发模式）
-cd /path/to/KitClaw && pip install -e .
+cd /path/to/Z-Core && pip install -e .
 
 # 初始化
 zcore init

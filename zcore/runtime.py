@@ -4,6 +4,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from zcore.paths import ai_memory_home, runtime_home
+
 
 @dataclass(frozen=True)
 class RuntimePaths:
@@ -29,11 +31,13 @@ class RuntimePaths:
 
     @classmethod
     def discover(cls) -> "RuntimePaths":
-        home = Path.home()
-        base_dir = Path(os.environ.get("ZCORE_HOME", home / ".zcore")).expanduser()
-        memory_dir = Path(os.environ.get("AI_MEMORY_DIR", home / ".ai-memory")).expanduser()
-        skills_dir = Path(os.environ.get("AI_SKILLS_DIR", home / ".ai-skills")).expanduser()
-        knowledge_db_path = Path(os.environ.get("ZCORE_KNOWLEDGE_DB", home / ".lancedb" / "knowledge")).expanduser()
+        env_home = Path(os.environ.get("HOME", str(Path.home()))).expanduser()
+        base_dir = runtime_home()
+        memory_dir = ai_memory_home()
+        skills_dir = Path(os.environ.get("AI_SKILLS_DIR") or env_home / ".ai-skills").expanduser()
+        knowledge_db_path = Path(
+            os.environ.get("ZCORE_KNOWLEDGE_DB") or env_home / ".lancedb" / "knowledge"
+        ).expanduser()
         hooks_dir = base_dir / "hooks"
         return cls(
             base_dir=base_dir,
