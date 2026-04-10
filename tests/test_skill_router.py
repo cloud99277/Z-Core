@@ -24,6 +24,7 @@ def make_runtime(tmp_path: Path) -> RuntimePaths:
         base_dir=base_dir,
         config_path=base_dir / "config.toml",
         shared_rules_path=base_dir / "shared-rules.yaml",
+        mcp_registry_path=base_dir / "mcp-servers.toml",
         sessions_dir=base_dir / "sessions",
         session_index_path=base_dir / "sessions" / "index.json",
         logs_dir=base_dir / "logs",

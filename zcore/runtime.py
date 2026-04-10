@@ -12,6 +12,7 @@ class RuntimePaths:
     base_dir: Path
     config_path: Path
     shared_rules_path: Path
+    mcp_registry_path: Path
     sessions_dir: Path
     session_index_path: Path
     logs_dir: Path
@@ -43,6 +44,7 @@ class RuntimePaths:
             base_dir=base_dir,
             config_path=base_dir / "config.toml",
             shared_rules_path=base_dir / "shared-rules.yaml",
+            mcp_registry_path=base_dir / "mcp-servers.toml",
             sessions_dir=base_dir / "sessions",
             session_index_path=base_dir / "sessions" / "index.json",
             logs_dir=base_dir / "logs",

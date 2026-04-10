@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from zcore import __version__
@@ -17,6 +18,7 @@ from zcore.engines.agent_setup import AgentSetupEngine
 from zcore.engines.context import ContextEngine
 from zcore.engines.ghost_agent import GhostAgent
 from zcore.engines.governance import PermissionDeniedError, PermissionEngine, resolve_ask_behavior
+from zcore.engines.mcp import McpEngine
 from zcore.engines.memory import MemoryEngine
 from zcore.engines.observability import ObservabilityEngine
 from zcore.engines.router import SkillRouter
@@ -165,6 +167,31 @@ def _build_parser() -> argparse.ArgumentParser:
     workflow_run.add_argument("name_or_file")
     workflow_run.add_argument("--dry-run", action="store_true")
     workflow_run.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    mcp_parser = subparsers.add_parser("mcp", help="Manage MCP servers and sync across agents")
+    mcp_subparsers = mcp_parser.add_subparsers(dest="mcp_command", required=True)
+
+    mcp_list = mcp_subparsers.add_parser("list", help="List registered MCP servers")
+    mcp_list.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    mcp_add = mcp_subparsers.add_parser("add", help="Add an MCP server to the registry")
+    mcp_add.add_argument("name")
+    mcp_add.add_argument("--command", dest="mcp_exec", required=True)
+    mcp_add.add_argument("--args", action="append", default=[])
+    mcp_add.add_argument("--env", action="append", default=[])
+    mcp_add.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    mcp_remove = mcp_subparsers.add_parser("remove", help="Remove an MCP server from the registry")
+    mcp_remove.add_argument("name")
+    mcp_remove.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    mcp_sync = mcp_subparsers.add_parser("sync", help="Sync registry MCP servers into agent configs")
+    mcp_sync.add_argument("--agent", choices=["claude", "gemini", "codex", "all"], default="all")
+    mcp_sync.add_argument("--dry-run", action="store_true")
+    mcp_sync.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    mcp_diff = mcp_subparsers.add_parser("diff", help="Compare registry vs agent MCP configs")
+    mcp_diff.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     skill_parser = subparsers.add_parser("skill", help="Skill discovery and matching commands")
     skill_subparsers = skill_parser.add_subparsers(dest="skill_command", required=True)
@@ -380,9 +407,48 @@ def _parse_skill_args(items: list[str]) -> dict[str, object]:
     return parsed
 
 
+def _parse_repeated_csv(items: list[str]) -> list[str]:
+    values: list[str] = []
+    for item in items:
+        for part in item.split(","):
+            stripped = part.strip()
+            if stripped:
+                values.append(stripped)
+    return values
+
+
+def _parse_env_pairs(items: list[str]) -> dict[str, str]:
+    pairs: dict[str, str] = {}
+    for item in items:
+        if "=" not in item:
+            raise ValueError(f"invalid env pair (expected KEY=VALUE): {item}")
+        key, value = item.split("=", 1)
+        key = key.strip()
+        if not key:
+            raise ValueError(f"invalid env key: {item}")
+        pairs[key] = value
+    return pairs
+
+
+def _normalize_argv(argv: list[str] | None) -> list[str] | None:
+    if argv is None:
+        return None
+    normalized = list(argv)
+    if len(normalized) >= 2 and normalized[0] == "mcp" and normalized[1] == "add":
+        index = 0
+        while index < len(normalized) - 1:
+            if normalized[index] == "--args" and normalized[index + 1].startswith("-"):
+                normalized[index] = f"--args={normalized[index + 1]}"
+                del normalized[index + 1]
+                continue
+            index += 1
+    return normalized
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
-    args, unknown = parser.parse_known_args(argv)
+    raw_argv = argv if argv is not None else sys.argv[1:]
+    args, unknown = parser.parse_known_args(_normalize_argv(raw_argv))
     if getattr(args, "command", None) == "run" and unknown:
         args.skill_args.extend(unknown)
     elif unknown:
@@ -700,6 +766,84 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"{payload['workflow_name']}\t{payload['overall']}")
             return code
+
+    if args.command == "mcp":
+        engine = McpEngine(paths)
+        if args.mcp_command == "list":
+            servers = engine.list_servers()
+            payload = [
+                {
+                    "name": server.name,
+                    "command": server.command,
+                    "args": server.args,
+                    "args_count": len(server.args),
+                    "env": server.env,
+                    "env_count": len(server.env),
+                }
+                for server in servers
+            ]
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                for item in payload:
+                    print(f"{item['name']}\t{item['command']}\targs={item['args_count']}\tenv={item['env_count']}")
+            return 0
+
+        if args.mcp_command == "add":
+            try:
+                server = engine.add_server(
+                    args.name,
+                    args.mcp_exec,
+                    args=_parse_repeated_csv(args.args),
+                    env=_parse_env_pairs(args.env),
+                )
+            except ValueError as exc:
+                print(str(exc))
+                return 1
+            payload = {"ok": True, "server": {"name": server.name, **server.to_dict()}}
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print(f"Added MCP server: {server.name}")
+            return 0
+
+        if args.mcp_command == "remove":
+            removed = engine.remove_server(args.name)
+            if not removed:
+                print(json.dumps({"ok": False, "error": f"MCP server not found: {args.name}"}, ensure_ascii=False) if args.json else f"MCP server not found: {args.name}")
+                return 1
+            payload = {"ok": True, "removed": args.name}
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print(f"Removed MCP server: {args.name}")
+            return 0
+
+        if args.mcp_command == "sync":
+            agents = ["claude", "gemini", "codex"] if args.agent == "all" else [args.agent]
+            results = [engine.sync_to_agent(agent, dry_run=args.dry_run).to_dict() for agent in agents]
+            payload = {"ok": True, "dry_run": args.dry_run, "results": results}
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                for result in results:
+                    print(
+                        f"{result['agent']}\tadded={len(result['servers_added'])}\t"
+                        f"removed={len(result['servers_removed'])}\tupdated={len(result['servers_updated'])}"
+                    )
+            return 0
+
+        if args.mcp_command == "diff":
+            payload = engine.diff()
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                for agent, result in payload["agents"].items():
+                    print(
+                        f"{agent}\tadded={len(result['servers_added'])}\t"
+                        f"removed={len(result['servers_removed'])}\tupdated={len(result['servers_updated'])}"
+                    )
+            return 0
 
     if args.command == "skill":
         router = SkillRouter(paths)

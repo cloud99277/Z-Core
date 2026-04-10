@@ -68,6 +68,7 @@ status_source: single-source-of-truth
 
 ## 明确延期（留给 V3）
 
+- 🖥️ Dashboard 可视化 UI 仪表盘（重大特性，需独立设计）
 - Planner Engine / Evaluator Engine / Agent Dispatcher
 - GhostAgent 按角色切换模型
 - Context Reset 机制
@@ -75,3 +76,5 @@ status_source: single-source-of-truth
 - Persona Engine (RFC-003)
 - 零信任签名验签
 - Embedding 语义去重
+
+> 详细规划见 `v2/pm/ideas/V3-Roadmap.md`

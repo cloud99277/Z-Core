@@ -26,6 +26,7 @@
 
 ## 延后池（V3）
 
+- 🖥️ Dashboard 可视化 UI 仪表盘
 - Planner Engine / Evaluator Engine / Agent Dispatcher
 - GhostAgent 按角色切换模型
 - Context Reset 机制
