@@ -167,7 +167,7 @@ Ghost Agent 提供 LLM 驱动的压缩和提取。不启用也完全可用（自
 
 ```bash
 zcore config set llm_backend.enabled true
-export KITCLAW_LLM_API_KEY="your-api-key"
+export ZCORE_LLM_API_KEY="your-api-key"
 ```
 
 > 📖 完整引导教程：[docs/getting-started.md](docs/getting-started.md)
@@ -416,7 +416,7 @@ permission_mode = "ask"           # ask | allow | deny
 API Key 通过环境变量设置（推荐）：
 
 ```bash
-export KITCLAW_LLM_API_KEY="your-api-key"
+export ZCORE_LLM_API_KEY="your-api-key"
 ```
 
 ---
@@ -435,6 +435,7 @@ export KITCLAW_LLM_API_KEY="your-api-key"
 | [治理引擎](v2/design/governance.md) | 权限规则与 Hook 框架 |
 | [产品战略](v2/design/product-strategy.md) | 愿景与定位 |
 | [Ghost Agent 深度审查](v2/design/ghost-agent-deep-review.md) | 10 维度架构评估 |
+| [0.2.0 发布说明](docs/release-0.2.0.md) | 独立抽离与发布就绪基线 |
 
 ---
 

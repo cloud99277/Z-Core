@@ -78,3 +78,8 @@
 - ✅ 更新 `Current-State.md`、`sprint-status.md`、`Changelog.md` 反映审查完成状态
 - ✅ 39/39 回归测试全部通过
 - ✅ **V2 全部文档已与代码同步，项目正式进入维护模式**
+- ✅ 独立仓库发布就绪修复：`RuntimePaths` 统一走环境变量/`HOME` 解析，修复隔离环境下路径漂移
+- ✅ 清理 standalone 残留：移除测试对 `rag-engine` / `governance` 旧目录的隐式依赖
+- ✅ 发布文档收口：README / README_CN / V2 文档统一到 `Z-Core` 命名，移除 `kitclaw` 安装口径与旧绝对路径链接
+- ✅ 发布元数据补全：`pyproject.toml` 增加 license / keywords / classifiers / dev extras
+- ✅ 发布验证完成：`python -m unittest discover tests -v` 通过，wheel/sdist 构建与元数据校验完成

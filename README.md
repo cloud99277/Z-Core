@@ -148,7 +148,7 @@ Ghost Agent provides LLM-powered compaction and extraction. Without it, Z-Core f
 
 ```bash
 zcore config set llm_backend.enabled true
-export KITCLAW_LLM_API_KEY="your-api-key"
+export ZCORE_LLM_API_KEY="your-api-key"
 ```
 
 > 📖 Full walkthrough: [docs/getting-started.md](docs/getting-started.md)
@@ -290,6 +290,7 @@ Z-Core/
 - [Skill Router](v2/design/skill-router.md) — Three-layer routing and orchestration
 - [Governance](v2/design/governance.md) — Permission rules and hooks
 - [Product Strategy](v2/design/product-strategy.md) — Vision and positioning
+- [Release Notes 0.2.0](docs/release-0.2.0.md) — standalone extraction and publish-ready baseline
 
 ## Origin
 
