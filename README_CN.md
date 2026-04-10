@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-≥3.11-blue?style=flat-square)](https://python.org)
 [![Dependencies](https://img.shields.io/badge/外部依赖-0-green?style=flat-square)](#)
-[![Tests](https://img.shields.io/badge/测试-39%20通过-brightgreen?style=flat-square)](#测试)
+[![Tests](https://img.shields.io/badge/测试-50%20通过-brightgreen?style=flat-square)](#测试)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ---
@@ -24,6 +24,7 @@ Z-Core 是一个 **Agent 无关** 的运行时中间件，为你的 CLI Agent（
 | 🛡️ **治理** | 权限规则、危险 Shell 检测、执行审计 |
 | 📊 **可观测性** | 执行统计、成本追踪、健康报告 |
 | 🤖 **Agent 设置** | 自动注入指令到 Claude/Gemini/Codex 配置文件 |
+| 🔌 **MCP 管理** | 一处注册 MCP Server，并同步到多个 Agent 配置 |
 | 🔁 **工作流** | 基于 TOML 的多步骤技能编排 |
 
 ### 核心设计原则
@@ -46,6 +47,10 @@ zcore init
 
 # 自动配置你的 Agent（Claude、Gemini、Codex）
 zcore setup all
+
+# 注册并预演同步一个 MCP Server
+zcore mcp add filesystem --command npx --args "-y,@modelcontextprotocol/server-filesystem,/tmp"
+zcore mcp sync --dry-run --json
 
 # 检查系统健康状态
 zcore doctor --json
@@ -176,7 +181,7 @@ export ZCORE_LLM_API_KEY="your-api-key"
 
 ## 架构
 
-Z-Core 由 **9 个独立引擎** 构成，全部通过 `RuntimePaths` 依赖注入：
+Z-Core 由 **10 个独立引擎** 构成，全部通过 `RuntimePaths` 依赖注入：
 
 ```
 ContextEngine       → 分析 / 压缩 / 预裁剪
@@ -186,6 +191,7 @@ SkillRouter         → 发现 / 匹配 / 执行 / 安装 / 验证
 PermissionEngine    → 检查 / 添加规则 / 审计报告
 ObservabilityEngine → 记录执行 / 记录成本 / 统计 / 健康检查
 AgentSetupEngine    → 检测 / 设置 / 注入
+McpEngine           → 注册 / 对比 / 同步 MCP Server 到各 Agent
 GhostAgent          → 生成 / 可用性检查 / 三级降级
 WorkflowEngine      → 发现 / 校验 / 执行
 ```
@@ -203,7 +209,7 @@ Level 2：提取也失败 → 原始对话 gzip 保存，下次补做处理
 
 ---
 
-## CLI 命令一览（35/35）
+## CLI 命令一览（40/40）
 
 ### 运行时管理
 
@@ -283,6 +289,16 @@ zcore setup detect [--json]                            # 检测已安装的 Agen
 zcore setup claude|gemini|codex|all [--dry-run] [--json]  # 自动配置 Agent
 ```
 
+### MCP 管理
+
+```bash
+zcore mcp list [--json]                                           # 列出注册的 MCP Server
+zcore mcp add <name> --command <cmd> [--args <args>] [--env KEY=VAL] [--json]  # 注册 MCP Server
+zcore mcp remove <name> [--json]                                  # 从注册表删除
+zcore mcp sync [--agent claude|gemini|codex|all] [--dry-run] [--json]  # 同步到 Agent 配置
+zcore mcp diff [--json]                                           # 查看注册表与 Agent 配置差异
+```
+
 ### 配置管理
 
 ```bash
@@ -325,9 +341,9 @@ python -m unittest discover tests -q
 
 ```
 Z-Core/
-├── zcore/                  # Python 包（5,457 行源码）
-│   ├── cli/main.py         # argparse CLI（35 个命令）
-│   ├── engines/            # 9 个引擎
+├── zcore/                  # Python 包
+│   ├── cli/main.py         # argparse CLI（40 个命令）
+│   ├── engines/            # 10 个引擎
 │   │   ├── context.py      #   上下文引擎
 │   │   ├── memory.py       #   记忆引擎
 │   │   ├── session.py      #   会话管理器
@@ -335,6 +351,7 @@ Z-Core/
 │   │   ├── governance.py   #   治理引擎
 │   │   ├── observability.py#   可观测性引擎
 │   │   ├── agent_setup.py  #   Agent 设置引擎
+│   │   ├── mcp.py          #   MCP 管理引擎
 │   │   ├── ghost_agent.py  #   Ghost Agent
 │   │   └── workflow.py     #   工作流引擎
 │   ├── models/             # 数据模型
@@ -343,7 +360,7 @@ Z-Core/
 │   ├── prompts/            # LLM Prompt 模板
 │   ├── config.py           # TOML 配置管理
 │   └── runtime.py          # RuntimePaths 发现
-├── tests/                  # 39 个单元测试（2,573 行）
+├── tests/                  # 50 个单元测试
 ├── v2/                     # 设计文档
 │   ├── design/             #   架构与引擎规格书
 │   ├── pm/                 #   项目管理（状态、Backlog、决策日志、变更日志）
@@ -433,6 +450,7 @@ export ZCORE_LLM_API_KEY="your-api-key"
 | [会话管理](v2/design/session-manager.md) | 生命周期、交接、暂停/恢复 |
 | [技能路由](v2/design/skill-router.md) | 三层路由与编排 |
 | [治理引擎](v2/design/governance.md) | 权限规则与 Hook 框架 |
+| [MCP 管理任务](v2/pm/tasks/MCP-Management-Codex-Task.md) | MCP 注册表与跨 Agent 同步 |
 | [产品战略](v2/design/product-strategy.md) | 愿景与定位 |
 | [Ghost Agent 深度审查](v2/design/ghost-agent-deep-review.md) | 10 维度架构评估 |
 | [0.2.0 发布说明](docs/release-0.2.0.md) | 独立抽离与发布就绪基线 |

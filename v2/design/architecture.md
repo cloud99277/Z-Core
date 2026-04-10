@@ -51,10 +51,10 @@ depends_on: ["rfcs/001-runtime-vs-scripts.md"]
 │  │ Skill    │ │ Govern-  │ │ Observ-  │            |
 │  │ Router   │ │ ance     │ │ ability  │            |
 │  └──────────┘ └──────────┘ └──────────┘            |
-|  ┌──────────┐ ┌──────────────────────────────┐     |
-│  │ Persona  │ │     Ghost Agent (后台小模型)  │     |
-│  │ Engine   │ │                              │     |
-│  └──────────┘ └──────────────────────────────┘     |
+│  ┌──────────┐ ┌──────────┐ ┌───────────────────┐   |
+│  │ Agent    │ │ MCP      │ │ Ghost Agent       │   |
+│  │ Setup    │ │ Engine   │ │ (后台小模型)       │   |
+│  └──────────┘ └──────────┘ └───────────────────┘   |
 └──────────────────────┬──────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────┐
@@ -80,6 +80,7 @@ depends_on: ["rfcs/001-runtime-vs-scripts.md"]
 ~/.zcore/                      # v2 运行时主目录
 ├── config.toml                  # 全局配置
 ├── shared-rules.yaml            # 共享规则注入数据源（详见 shared-rules-injection.md）
+├── mcp-servers.toml             # MCP Server 注册表（single source of truth）
 ├── sessions/                    # 会话快照
 │   └── <session-id>/
 │       ├── meta.json            # 会话元数据（agent, project, timestamps）
@@ -122,7 +123,7 @@ version = "2.0"
 enabled = true                        # false = 完全禁用，退化为无 LLM 模式
 provider = "google"                   # google | anthropic | openai | deepseek | ollama
 model = "gemini-2.5-flash"
-# api_key 优先从环境变量 KITCLAW_LLM_API_KEY 读取
+# api_key 优先从环境变量 ZCORE_LLM_API_KEY 读取
 # 如果未设环境变量，从此处读取（不推荐，文件权限必须 600）
 # api_key = ""
 endpoint = ""                         # Ollama 或自定义 endpoint
@@ -181,11 +182,14 @@ graph TD
     Router --> Session[Session Manager]
     Router --> Governance[Governance Engine]
     Router --> Observability[Observability Engine]
+    Router --> AgentSetup[Agent Setup Engine]
+    Router --> Mcp[MCP Engine]
 
     Context --> Memory
     Session --> Context
     Session --> Memory
     Governance --> Observability
+    Mcp --> AgentSetup
     Router --> SharedRules[Shared Rules Injection]
     Governance --> SharedRules
 
@@ -193,6 +197,8 @@ graph TD
     Context --> Storage
     Session --> Storage
     Observability --> Storage
+    AgentSetup --> Storage
+    Mcp --> Storage
     SharedRules --> Storage
 ```
 
@@ -218,7 +224,7 @@ zcore/                          # Python package root
 ├── __version__.py                # 版本号 0.2.0
 ├── cli/
 │   ├── __init__.py
-│   └── main.py                   # argparse CLI（35 个命令，全覆盖）
+│   └── main.py                   # argparse CLI（40 个命令，全覆盖）
 ├── engines/
 │   ├── __init__.py
 │   ├── context.py                # Context Engine
@@ -228,6 +234,7 @@ zcore/                          # Python package root
 │   ├── governance.py             # Governance Engine（权限规则 + shell 分类）
 │   ├── observability.py          # Observability Engine（成本追踪 + 健康报告）
 │   ├── agent_setup.py            # Agent Setup Engine（检测 + 标记块注入）
+│   ├── mcp.py                    # MCP Engine（注册表 + diff + sync）
 │   ├── workflow.py               # Workflow Engine（TOML → discover/validate/run）
 │   └── ghost_agent.py            # Ghost Agent (API直连封装)
 ├── models/                       # 数据模型
@@ -235,6 +242,7 @@ zcore/                          # Python package root
 │   ├── session.py                # SessionMeta（含 pause/resume 状态）
 │   ├── memory.py                 # MemoryEntry（4 类分类 + expired）
 │   ├── skill.py                  # SkillManifest + 激活/权限/IO 配置
+│   ├── mcp.py                    # McpServer + McpSyncResult
 │   └── workflow.py               # WorkflowDefinition, StepResult, WorkflowResult
 ├── hooks/                        # Hook 框架
 │   ├── __init__.py

@@ -83,3 +83,6 @@
 - ✅ 发布文档收口：README / README_CN / V2 文档统一到 `Z-Core` 命名，移除 `kitclaw` 安装口径与旧绝对路径链接
 - ✅ 发布元数据补全：`pyproject.toml` 增加 license / keywords / classifiers / dev extras
 - ✅ 发布验证完成：`python -m unittest discover tests -v` 通过，wheel/sdist 构建与元数据校验完成
+- ✅ MCP 管理功能交付：新增 `zcore mcp list/add/remove/sync/diff`，支持统一注册 MCP Server 并同步到 Claude/Gemini/Codex 配置
+- ✅ 新增 `McpEngine` + `McpServer`/`McpSyncResult` 数据模型，`~/.zcore/mcp-servers.toml` 作为 single source of truth
+- ✅ MCP 回归测试完成：新增 `tests/test_mcp.py` 11 个用例，全量回归更新为 `50` 个测试通过

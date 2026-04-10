@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-≥3.11-blue?style=flat-square)](https://python.org)
 [![Dependencies](https://img.shields.io/badge/Dependencies-0-green?style=flat-square)](#)
-[![Tests](https://img.shields.io/badge/Tests-39%20passing-brightgreen?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-50%20passing-brightgreen?style=flat-square)](#testing)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 Z-Core is an agent-agnostic runtime middleware that gives your CLI agents (Claude Code, Gemini CLI, Codex CLI, etc.) a shared infrastructure for:
@@ -18,6 +18,7 @@ Z-Core is an agent-agnostic runtime middleware that gives your CLI agents (Claud
 - 🛡️ **Governance** — permission rules, dangerous shell detection, execution audit
 - 📊 **Observability** — execution stats, cost tracking, health reports
 - 🤖 **Agent Setup** — auto-inject instructions into Claude/Gemini/Codex configs
+- 🔌 **MCP Management** — register MCP servers once and sync them into multiple agent configs
 - 🔁 **Workflows** — TOML-based multi-step skill orchestration
 
 ## Quick Start
@@ -31,6 +32,10 @@ zcore init
 
 # Auto-configure your agents (Claude, Gemini, Codex)
 zcore setup all
+
+# Register and preview-sync an MCP server
+zcore mcp add filesystem --command npx --args "-y,@modelcontextprotocol/server-filesystem,/tmp"
+zcore mcp sync --dry-run --json
 
 # Check system health
 zcore doctor --json
@@ -155,7 +160,7 @@ export ZCORE_LLM_API_KEY="your-api-key"
 
 ## Architecture
 
-Z-Core consists of **9 independent engines**, all injectable via `RuntimePaths`:
+Z-Core consists of **10 independent engines**, all injectable via `RuntimePaths`:
 
 ```
 ContextEngine    → analyze / compact / pre-trim
@@ -165,6 +170,7 @@ SkillRouter      → discover / match / execute / install / validate
 PermissionEngine → check / add_rule / audit_report
 ObservabilityEngine → log_execution / log_cost / stats / health
 AgentSetupEngine → detect / setup / inject
+McpEngine        → register / diff / sync MCP servers across agents
 GhostAgent       → generate / availability / fallback
 WorkflowEngine   → discover / validate / run
 ```
@@ -175,7 +181,7 @@ WorkflowEngine   → discover / validate / run
 - **Agent-agnostic** — works with any terminal-native AI agent
 - **Ghost Agent** — optional cheap LLM backend for autonomous compaction/extraction
 
-## CLI Commands (35/35)
+## CLI Commands (40/40)
 
 ```bash
 # Runtime
@@ -232,6 +238,13 @@ zcore observe health [--json]
 zcore setup detect [--json]
 zcore setup claude|gemini|codex|all [--dry-run] [--json]
 
+# MCP management
+zcore mcp list [--json]
+zcore mcp add <name> --command <cmd> [--args <args>] [--env KEY=VAL] [--json]
+zcore mcp remove <name> [--json]
+zcore mcp sync [--agent claude|gemini|codex|all] [--dry-run] [--json]
+zcore mcp diff [--json]
+
 # Config
 zcore config show [--json]
 zcore config set <section.key> <value> [--json]
@@ -260,16 +273,16 @@ python -m unittest discover tests -q
 
 ```
 Z-Core/
-├── zcore/                  # Python package (5,457 lines)
-│   ├── cli/main.py         # argparse CLI (35 commands)
-│   ├── engines/            # 9 engines
+├── zcore/                  # Python package
+│   ├── cli/main.py         # argparse CLI (40 commands)
+│   ├── engines/            # 10 engines
 │   ├── models/             # Data models
 │   ├── hooks/              # Lifecycle hook framework
 │   ├── utils/              # Shared utilities
 │   ├── prompts/            # LLM prompt templates
 │   ├── config.py           # TOML config management
 │   └── runtime.py          # RuntimePaths discovery
-├── tests/                  # Standalone regression suite
+├── tests/                  # Standalone regression suite (50 tests)
 ├── v2/                     # Design documentation
 │   ├── design/             # Architecture & engine specs
 │   ├── pm/                 # Project management
@@ -289,6 +302,7 @@ Z-Core/
 - [Session Manager](v2/design/session-manager.md) — Lifecycle, handoff, pause/resume
 - [Skill Router](v2/design/skill-router.md) — Three-layer routing and orchestration
 - [Governance](v2/design/governance.md) — Permission rules and hooks
+- [MCP Management Task](v2/pm/tasks/MCP-Management-Codex-Task.md) — MCP registry and cross-agent sync
 - [Product Strategy](v2/design/product-strategy.md) — Vision and positioning
 - [Release Notes 0.2.0](docs/release-0.2.0.md) — standalone extraction and publish-ready baseline
 

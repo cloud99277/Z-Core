@@ -1,6 +1,8 @@
 import json
+import os
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from zcore.engines.mcp import McpEngine
 from zcore.runtime import RuntimePaths
@@ -167,7 +169,8 @@ class McpTests(unittest.TestCase):
             codex_config.parent.mkdir(parents=True, exist_ok=True)
             codex_config.write_text(json.dumps({"mcpServers": {"echoer": {"command": "echo", "args": ["old"]}}}), encoding="utf-8")
 
-            result = engine.sync_to_agent("codex")
+            with patch.dict(os.environ, {"HOME": str(ctx.home)}):
+                result = engine.sync_to_agent("codex")
             self.assertEqual(result.servers_updated, ["echoer"])
             config = json.loads(codex_config.read_text(encoding="utf-8"))
             self.assertEqual(config["mcpServers"]["echoer"]["args"], ["hello"])

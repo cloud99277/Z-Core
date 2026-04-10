@@ -2,7 +2,7 @@
 
 > **定位转型**：从 "共享 Skill 脚本集" → "有自己后台脑力的 Agent 运行时中间件"
 > **架构突破**：Ghost Agent — 配属独立廉价小模型，实现全自动压缩/记忆提取闭环
-> **当前状态**：**V2 收官** — 9 Engine / 35 CLI / 39 测试 / 0 外部依赖 / `pip install zcore` 可用
+> **当前状态**：**V2 收官并完成 MCP 管理扩展** — 10 Engine / 40 CLI / 50 测试 / 0 外部依赖 / `pip install zcore` 可用
 
 ## 目录结构
 
@@ -40,7 +40,8 @@ v2/
 │   ├── tasks/                              # Codex 任务文件
 │   │   ├── Phase4-Codex-Task.md
 │   │   ├── Phase5-Codex-Task.md
-│   │   └── Phase6-Codex-Task.md
+│   │   ├── Phase6-Codex-Task.md
+│   │   └── MCP-Management-Codex-Task.md
 │   └── reviews/                            # 阶段审查报告
 │       ├── Phase0-Review.md
 │       ├── Phase1-Review.md
@@ -65,7 +66,7 @@ zcore/                              # pip install -e . → CLI 命令 `zcore`
 ├── __version__.py                  # 版本号 0.2.0
 ├── cli/
 │   ├── __init__.py
-│   └── main.py                     # argparse CLI（35 个命令，全覆盖）
+│   └── main.py                     # argparse CLI（40 个命令，全覆盖）
 ├── engines/
 │   ├── context.py                  # Context Engine（analyze + compact + 预裁剪）
 │   ├── ghost_agent.py              # Ghost Agent（4 provider API + heuristic fallback + budget）
@@ -75,11 +76,13 @@ zcore/                              # pip install -e . → CLI 命令 `zcore`
 │   ├── governance.py               # Governance Engine（权限规则 + 危险 shell 分类 + audit）
 │   ├── observability.py            # Observability Engine（执行统计 + 成本追踪 + 健康报告）
 │   ├── agent_setup.py              # Agent Setup Engine（检测 + 标记块注入）
+│   ├── mcp.py                      # MCP Engine（注册表 + diff + sync）
 │   └── workflow.py                 # Workflow Engine（TOML 定义 + discover/validate/run）
 ├── models/
 │   ├── session.py                  # SessionMeta dataclass（含 pause/resume 状态）
 │   ├── memory.py                   # MemoryEntry dataclass（4 类分类法 + expired）
 │   ├── skill.py                    # SkillManifest + 激活/权限/IO 配置
+│   ├── mcp.py                      # McpServer + McpSyncResult
 │   └── workflow.py                 # WorkflowDefinition + StepResult + WorkflowResult
 ├── hooks/
 │   ├── lifecycle.py                # HookRunner + 自定义 hook 脚本加载
@@ -122,6 +125,7 @@ zcore/                              # pip install -e . → CLI 命令 `zcore`
 | 4 | Observability + Agent Setup | 成本追踪 + Agent 检测/注入 + Config CLI | ✅ 完成 |
 | 5 | CLI Completeness | Skill/Session/Memory/Audit 补全 + 测试整治 | ✅ 完成 |
 | 6 | V2 收官 | Workflow Engine + Session pause/resume + pip 打包 | ✅ 完成 |
+| 7 | MCP Management | MCP 注册表 + 跨 Agent 同步 + diff | ✅ 完成 |
 
 **V2 进入维护模式。V3 规划见 `pm/ideas/`。**
 
@@ -131,6 +135,7 @@ zcore/                              # pip install -e . → CLI 命令 `zcore`
 - [统一 CLI 设计](./design/cli.md)
 - [整体架构](./design/architecture.md)
 - [Ghost Agent 深度审查](./design/ghost-agent-deep-review.md)
+- [MCP 管理任务](./pm/tasks/MCP-Management-Codex-Task.md)
 - [审查报告](./pm/reviews/)（Phase 0-6，共 7 份）
 - [当前状态](./pm/Current-State.md)
 - [Sprint Backlog](./pm/Sprint-Backlog.md)
