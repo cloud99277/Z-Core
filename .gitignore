@@ -10,13 +10,6 @@ build/
 .venv/
 venv/
 .env
-.env.*
-*.local.js
-*.local.ts
-serviceAccount*.json
-*credentials*.json
-v2/
-!v2/design/
 .vscode/
 .idea/
 *.swp

@@ -370,7 +370,11 @@ pip install -e ".[dev]"
 # 提交前
 python -m compileall zcore tests
 python -m unittest discover tests -v
-```
+---
+
+## 📦 与 KitClaw 的关系
+
+Z-Core 是 [KitClaw](https://github.com/cloud99277/KitClaw) 多 Agent 基础设施的**增强演进版**，完整覆盖 KitClaw 的全部能力，并在此基础上扩展了 Ghost Agent、MCP 管理、工作流编排等新引擎。独立仓库，独立发布，可单独使用。
 
 ---
 

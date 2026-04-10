@@ -353,6 +353,12 @@ python -m unittest discover tests -q    # Quick check
 
 ---
 
+## 📦 Relationship with KitClaw
+
+Z-Core is the **enhanced evolution** of the [KitClaw](https://github.com/cloud99277/KitClaw) multi-agent infrastructure — fully covering all of KitClaw's capabilities and extending them with new engines for Ghost Agent, MCP management, and workflow orchestration. Independent repo, independent release, usable standalone.
+
+---
+
 ## 🙏 Contributing
 
 Issues and PRs welcome. Key principles:
