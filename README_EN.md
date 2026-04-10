@@ -1,13 +1,22 @@
 [简体中文](README.md) | [English](README_EN.md)
 
+<div align="center">
+
 # 🐾 Z-Core
 
 **Give your AI agents persistent memory, session management, and skill orchestration — zero dependencies, pure CLI.**
 
+[![Author](https://img.shields.io/badge/Author-Cloud927-blue?style=flat-square)](https://github.com/cloud99277)
 [![Python](https://img.shields.io/badge/Python-≥3.11-blue?style=flat-square)](https://python.org)
 [![Dependencies](https://img.shields.io/badge/Dependencies-0-green?style=flat-square)](#)
-[![Tests](https://img.shields.io/badge/Tests-50%20passing-brightgreen?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-50%20passing-brightgreen?style=flat-square)](#-testing)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+</div>
+
+---
+
+## ✨ Features
 
 Claude Code, Gemini CLI, Codex CLI — each one is powerful, but none of them remember anything after the session ends. They can't share context. They can't hand off work to each other.
 
@@ -23,7 +32,16 @@ Claude Code, Gemini CLI, Codex CLI — each one is powerful, but none of them re
 - 📊 **Observability** — execution stats, cost tracking, health reports
 - 🤖 **Agent Auto-Setup** — injects instructions into Claude/Gemini/Codex configs automatically
 
-## Install
+### Core Design Principles
+
+- **Zero external dependencies** — Python 3.11+ stdlib only
+- **No daemon** — pure CLI, stateless between invocations
+- **Agent-agnostic** — works with any terminal-native AI agent
+- **Ghost Agent** — autonomous cheap-LLM backend for compaction/extraction
+
+---
+
+## 📦 Installation
 
 ```bash
 git clone <repo-url> Z-Core && cd Z-Core
@@ -36,7 +54,9 @@ zcore --version
 
 Python ≥3.11. Zero external dependencies — stdlib only.
 
-## 60-Second Quick Start
+---
+
+## 🚀 60-Second Quick Start
 
 ```bash
 # 1. Initialize runtime
@@ -58,7 +78,9 @@ zcore memory search --query "database decisions" --json
 
 That's it. Your agents now have persistent memory.
 
-## How It Works
+---
+
+## 🏗️ How It Works
 
 ```
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
@@ -83,7 +105,9 @@ That's it. Your agents now have persistent memory.
 
 Z-Core is a **stateless CLI** — no daemon, no background process. Each invocation reads/writes files directly. Agents call it via `zcore <command> --json` and get structured JSON back.
 
-## Ghost Agent — The Soul of Z-Core
+---
+
+## 👻 Ghost Agent — The Soul of Z-Core
 
 Z-Core's engines handle memory, sessions, and skills. But **Ghost Agent** is what makes it *autonomous*.
 
@@ -144,16 +168,9 @@ export ZCORE_LLM_API_KEY="***"
 # Check status
 zcore status
 # → Ghost Agent: remote (google/gemini-2.5-flash)
-
-# That's it. Session end now auto-extracts + compacts.
 ```
 
-**Cost:** ~$0.01 per session with Gemini Flash. Budget cap available:
-
-```toml
-[llm_backend]
-monthly_budget = 5.00    # Degrades to heuristic mode when exceeded
-```
+**Cost:** ~$0.01 per session with Gemini Flash. Budget cap: `monthly_budget = 5.00` (degrades when exceeded).
 
 **Privacy:** all prompts are sanitized before sending — API keys, file paths, and secrets are auto-redacted.
 
@@ -161,7 +178,9 @@ monthly_budget = 5.00    # Degrades to heuristic mode when exceeded
 
 → **[Ghost Agent Deep Review](v2/design/ghost-agent-deep-review.md)** — 10-dimension architecture audit
 
-## Key Commands
+---
+
+## 📖 Key Commands
 
 ```bash
 # Runtime
@@ -190,9 +209,11 @@ zcore mcp sync --dry-run
 
 All commands support `--json` for structured output. Agents should always use it.
 
-→ **[Full command reference (40 commands)](docs/getting-started.md)**
+→ **[Getting Started Guide (with real output)](docs/getting-started.md)**
 
-## Agent Auto-Setup
+---
+
+## 🤖 Agent Auto-Setup
 
 `zcore setup` injects a managed instruction block into agent configs (`~/.claude/CLAUDE.md`, etc.) so they automatically learn to use Z-Core:
 
@@ -205,7 +226,57 @@ zcore setup claude --dry-run  # Preview without writing
 
 **Safe by design:** idempotent, auto-backup (`.bak`), non-destructive (only touches managed block).
 
-## Runtime Layout
+---
+
+## ⚙️ Configuration
+
+`~/.zcore/config.toml`:
+
+```toml
+[llm_backend]
+enabled = false                   # Enable Ghost Agent
+provider = "google"               # google | anthropic | openai | deepseek | ollama
+model = "gemini-2.5-flash"        # Recommended: cheap + fast
+monthly_budget = 5.00             # USD monthly cap
+fallback_on_failure = true        # Degrade to heuristic on API failure
+
+[privacy]
+redact_before_send = true         # Auto-redact secrets before LLM calls
+
+[memory]
+auto_extract = false              # Auto-extract on session end
+
+[context]
+auto_compact = false              # Auto-compact when context overflows
+
+[governance]
+permission_mode = "ask"           # ask | allow | deny
+```
+
+API keys via environment variables: `export ZCORE_LLM_API_KEY="***"`
+
+---
+
+## 🏗️ Architecture
+
+Z-Core is **10 independent engines**, all injected via `RuntimePaths`:
+
+| Engine | Responsibility |
+|--------|----------------|
+| **GhostAgent** 👻 | generate / availability / 3-level fallback (THE BRAIN) |
+| ContextEngine | analyze / compact / pre-trim |
+| MemoryEngine | extract / write / search / dedup / expire |
+| SessionManager | start / end / pause / resume / handoff / cleanup |
+| SkillRouter | discover / match / execute / install / validate |
+| PermissionEngine | check / add_rule / audit_report |
+| ObservabilityEngine | log_execution / log_cost / stats / health |
+| AgentSetupEngine | detect / setup / inject |
+| McpEngine | register / diff / sync across agents |
+| WorkflowEngine | discover / validate / run |
+
+---
+
+## 📁 Runtime Layout
 
 ```
 ~/.zcore/                         # Runtime directory (created by `zcore init`)
@@ -224,7 +295,6 @@ zcore setup claude --dry-run  # Preview without writing
 
 ~/.ai-memory/                     # Memory storage
 ├── topics/                       #   Topic-based entries
-├── staging/                      #   Pending extractions
 └── whiteboard.json               #   Cross-session decisions/actions
 
 ~/.ai-skills/                     # Skill installation directory
@@ -233,72 +303,16 @@ zcore setup claude --dry-run  # Preview without writing
     └── scripts/                  #   Executable scripts
 ```
 
-## Configuration
+---
 
-`~/.zcore/config.toml`:
-
-```toml
-[llm_backend]
-enabled = false                   # Enable Ghost Agent
-provider = "google"               # google | anthropic | openai | deepseek | ollama
-model = "gemini-2.5-flash"        # Recommended: cheap + fast
-monthly_budget = 5.00             # USD monthly cap
-fallback_on_failure = true        # Degrade to heuristic on API failure
-
-[privacy]
-redact_before_send = true         # Auto-redact secrets before LLM calls
-
-[memory]
-auto_extract = false              # Auto-extract on session end
-dedup_threshold = 0.85
-
-[context]
-auto_compact = false              # Auto-compact when context overflows
-compact_threshold_pct = 80
-
-[governance]
-permission_mode = "ask"           # ask | allow | deny
-```
-
-API keys via environment variables:
-
-```bash
-export ZCORE_LLM_API_KEY="***"
-```
-
-## Architecture
-
-Z-Core is **10 independent engines**, all injected via `RuntimePaths`:
-
-```
-Engine               Responsibility
-─────────────────    ──────────────────────────────
-GhostAgent           👻 generate / availability / 3-level fallback (THE BRAIN)
-ContextEngine        analyze / compact / pre-trim
-MemoryEngine         extract / write / search / dedup / expire
-SessionManager       start / end / pause / resume / handoff / cleanup
-SkillRouter          discover / match / execute / install / validate
-PermissionEngine     check / add_rule / audit_report
-ObservabilityEngine  log_execution / log_cost / stats / health
-AgentSetupEngine     detect / setup / inject
-McpEngine            register / diff / sync across agents
-WorkflowEngine       discover / validate / run
-```
-
-**Key design principles:**
-- **Zero external dependencies** — Python 3.11+ stdlib only
-- **No daemon** — pure CLI, stateless between invocations
-- **Agent-agnostic** — works with any terminal-native AI agent
-- **Ghost Agent** — autonomous cheap-LLM backend for compaction/extraction (see above)
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 Z-Core/
 ├── zcore/                  # Python package
 │   ├── cli/main.py         #   argparse CLI (40 commands)
 │   ├── engines/            #   10 engines
-│   ├── models/             #   Data models (Skill, Session, Memory, Workflow, MCP)
+│   ├── models/             #   Data models
 │   ├── hooks/              #   Lifecycle hook framework
 │   ├── utils/              #   Token estimation, FileLock, privacy redaction
 │   ├── prompts/            #   LLM prompt templates
@@ -306,19 +320,23 @@ Z-Core/
 │   └── runtime.py          #   RuntimePaths discovery
 ├── tests/                  # 50 unit tests
 ├── docs/                   # Guides and release notes
-├── v2/                     # Design docs, RFCs, PM artifacts
-├── pyproject.toml          # Package config (pip installable)
+├── v2/design/              # Architecture & engine specifications
+├── pyproject.toml          # Package config
 └── LICENSE                 # MIT
 ```
 
-## Testing
+---
+
+## 🧪 Testing
 
 ```bash
 python -m unittest discover tests -v    # Full suite
 python -m unittest discover tests -q    # Quick check
 ```
 
-## Documentation
+---
+
+## 📚 Documentation
 
 | Document | Content |
 |----------|---------|
@@ -328,14 +346,14 @@ python -m unittest discover tests -q    # Quick check
 | [Session Manager](v2/design/session-manager.md) | Lifecycle, handoff, pause/resume |
 | [Skill Router](v2/design/skill-router.md) | Three-layer routing and orchestration |
 | [Governance](v2/design/governance.md) | Permission rules and hooks |
-| [Product Strategy](v2/design/product-strategy.md) | Vision and positioning |
+| [Context Engine](v2/design/context-engine.md) | Token analysis and compaction |
+| [CLI Design](v2/design/cli.md) | Command interface specification |
+| [Ghost Agent Deep Review](v2/design/ghost-agent-deep-review.md) | 10-dimension architecture audit |
 | [Release Notes 0.2.0](docs/release-0.2.0.md) | Standalone extraction baseline |
 
-## Origin
+---
 
-Z-Core was extracted from the [KitClaw](https://github.com/cloud99277/KitClaw) multi-agent infrastructure project as a standalone runtime. It can be used independently or alongside KitClaw.
-
-## Contributing
+## 🙏 Contributing
 
 Issues and PRs welcome. Key principles:
 
@@ -354,6 +372,16 @@ python -m compileall zcore tests
 python -m unittest discover tests -v
 ```
 
-## License
+---
+
+## 📄 License
 
 [MIT](LICENSE)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [Cloud927](https://github.com/cloud99277)**
+
+</div>

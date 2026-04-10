@@ -16,6 +16,7 @@ venv/
 serviceAccount*.json
 *credentials*.json
 v2/
+!v2/design/
 .vscode/
 .idea/
 *.swp

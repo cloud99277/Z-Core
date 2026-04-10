@@ -1,13 +1,22 @@
 [简体中文](README.md) | [English](README_EN.md)
 
+<div align="center">
+
 # 🐾 Z-Core
 
 **给你的 AI Agent 装上持久记忆、会话管理与技能编排 — 零依赖，纯 CLI。**
 
+[![Author](https://img.shields.io/badge/Author-Cloud927-blue?style=flat-square)](https://github.com/cloud99277)
 [![Python](https://img.shields.io/badge/Python-≥3.11-blue?style=flat-square)](https://python.org)
 [![Dependencies](https://img.shields.io/badge/外部依赖-0-green?style=flat-square)](#)
-[![Tests](https://img.shields.io/badge/测试-50%20通过-brightgreen?style=flat-square)](#测试)
+[![Tests](https://img.shields.io/badge/测试-50%20通过-brightgreen?style=flat-square)](#-测试)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+</div>
+
+---
+
+## ✨ 特点
 
 Claude Code、Gemini CLI、Codex CLI — 每个都很强，但会话一关什么都不记得。它们之间无法共享上下文，也无法交接工作。
 
@@ -23,7 +32,16 @@ Claude Code、Gemini CLI、Codex CLI — 每个都很强，但会话一关什么
 - 📊 **可观测性** — 执行统计、成本追踪、健康报告
 - 🤖 **Agent 自动配置** — 自动注入指令到 Claude/Gemini/Codex 配置
 
-## 安装
+### 核心设计原则
+
+- **零外部依赖** — 仅使用 Python 3.11+ 标准库
+- **无常驻进程** — 纯 CLI 工具，调用间无状态
+- **Agent 无关** — 适配任何终端原生 AI Agent
+- **Ghost Agent** — 自主廉价 LLM 后端，负责压缩/提取
+
+---
+
+## 📦 安装
 
 ```bash
 git clone <repo-url> Z-Core && cd Z-Core
@@ -36,7 +54,9 @@ zcore --version
 
 Python ≥3.11，零外部依赖 — 仅使用标准库。
 
-## 60 秒快速上手
+---
+
+## 🚀 60 秒快速上手
 
 ```bash
 # 1. 初始化运行时
@@ -58,7 +78,9 @@ zcore memory search --query "数据库选型" --json
 
 搞定。你的 Agent 现在有持久记忆了。
 
-## 工作原理
+---
+
+## 🏗️ 工作原理
 
 ```
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
@@ -83,7 +105,9 @@ zcore memory search --query "数据库选型" --json
 
 Z-Core 是**无状态 CLI** — 没有守护进程，没有后台服务。每次调用直接读写文件。Agent 通过 `zcore <command> --json` 调用，获取结构化 JSON 返回。
 
-## Ghost Agent — Z-Core 的灵魂
+---
+
+## 👻 Ghost Agent — Z-Core 的灵魂
 
 Z-Core 的引擎负责记忆、会话和技能。但 **Ghost Agent** 才是让它*自主*运转的核心。
 
@@ -144,16 +168,9 @@ export ZCORE_LLM_API_KEY="***"
 # 检查状态
 zcore status
 # → Ghost Agent: remote (google/gemini-2.5-flash)
-
-# 搞定。session end 现在会自动提取 + 压缩。
 ```
 
-**成本：** Gemini Flash 约 $0.01/次会话。支持预算上限：
-
-```toml
-[llm_backend]
-monthly_budget = 5.00    # 超限后降级为启发式模式
-```
+**成本：** Gemini Flash 约 $0.01/次会话。支持预算上限 `monthly_budget = 5.00`（超限降级）。
 
 **隐私：** 所有 prompt 发送前自动脱敏 — API Key、文件路径、密钥自动抹除。
 
@@ -161,7 +178,9 @@ monthly_budget = 5.00    # 超限后降级为启发式模式
 
 → **[Ghost Agent 深度审查](v2/design/ghost-agent-deep-review.md)** — 10 维度架构评估
 
-## 核心命令
+---
+
+## 📖 核心命令
 
 ```bash
 # 运行时
@@ -190,11 +209,13 @@ zcore mcp sync --dry-run
 
 所有命令支持 `--json` 输出结构化数据。Agent 应始终使用该模式。
 
-→ **[完整命令参考（40 个命令）](docs/getting-started.md)**
+→ **[完整上手指南（含真实输出）](docs/getting-started.md)**
 
-## Agent 自动配置
+---
 
-`zcore setup` 自动向 Agent 配置文件（`~/.claude/CLAUDE.md` 等）注入托管指令块，让 Agent 自动学会使用 Z-Core：
+## 🤖 Agent 自动配置
+
+`zcore setup` 自动向 Agent 配置文件注入托管指令块，让 Agent 自动学会使用 Z-Core：
 
 ```bash
 zcore setup detect --json     # → claude: true, gemini: true, codex: false
@@ -205,7 +226,57 @@ zcore setup claude --dry-run  # 预览不修改
 
 **安全保障：** 幂等注入、自动备份（`.bak`）、不破坏原有内容。
 
-## 运行时目录
+---
+
+## ⚙️ 配置
+
+`~/.zcore/config.toml`：
+
+```toml
+[llm_backend]
+enabled = false                   # 启用 Ghost Agent
+provider = "google"               # google | anthropic | openai | deepseek | ollama
+model = "gemini-2.5-flash"        # 推荐：廉价快速模型
+monthly_budget = 5.00             # 月度预算上限（美元）
+fallback_on_failure = true        # API 失败时降级为启发式模式
+
+[privacy]
+redact_before_send = true         # 发送前自动脱敏
+
+[memory]
+auto_extract = false              # 会话结束时自动提取记忆
+
+[context]
+auto_compact = false              # 上下文超限时自动压缩
+
+[governance]
+permission_mode = "ask"           # ask | allow | deny
+```
+
+API Key 通过环境变量设置：`export ZCORE_LLM_API_KEY="***"`
+
+---
+
+## 🏗️ 架构
+
+Z-Core 由 **10 个独立引擎** 构成，全部通过 `RuntimePaths` 依赖注入：
+
+| 引擎 | 职责 |
+|------|------|
+| **GhostAgent** 👻 | 生成 / 可用性检查 / 三级降级（大脑） |
+| ContextEngine | 分析 / 压缩 / 预裁剪 |
+| MemoryEngine | 提取 / 写入 / 搜索 / 去重 / 过期 |
+| SessionManager | 开始 / 结束 / 暂停 / 恢复 / 交接 / 清理 |
+| SkillRouter | 发现 / 匹配 / 执行 / 安装 / 验证 |
+| PermissionEngine | 检查 / 添加规则 / 审计报告 |
+| ObservabilityEngine | 记录执行 / 记录成本 / 统计 / 健康检查 |
+| AgentSetupEngine | 检测 / 配置 / 注入 |
+| McpEngine | 注册 / 对比 / 同步到各 Agent |
+| WorkflowEngine | 发现 / 校验 / 执行 |
+
+---
+
+## 📁 运行时目录
 
 ```
 ~/.zcore/                         # 运行时主目录（zcore init 创建）
@@ -224,7 +295,6 @@ zcore setup claude --dry-run  # 预览不修改
 
 ~/.ai-memory/                     # 记忆存储
 ├── topics/                       #   按主题存储的条目
-├── staging/                      #   待处理的提取结果
 └── whiteboard.json               #   跨会话决策/行动
 
 ~/.ai-skills/                     # 技能安装目录
@@ -233,72 +303,16 @@ zcore setup claude --dry-run  # 预览不修改
     └── scripts/                  #   可执行脚本
 ```
 
-## 配置
+---
 
-`~/.zcore/config.toml`：
-
-```toml
-[llm_backend]
-enabled = false                   # 启用 Ghost Agent
-provider = "google"               # google | anthropic | openai | deepseek | ollama
-model = "gemini-2.5-flash"        # 推荐：廉价快速模型
-monthly_budget = 5.00             # 月度预算上限（美元）
-fallback_on_failure = true        # API 失败时降级为启发式模式
-
-[privacy]
-redact_before_send = true         # 发送前自动脱敏
-
-[memory]
-auto_extract = false              # 会话结束时自动提取记忆
-dedup_threshold = 0.85
-
-[context]
-auto_compact = false              # 上下文超限时自动压缩
-compact_threshold_pct = 80
-
-[governance]
-permission_mode = "ask"           # ask | allow | deny
-```
-
-API Key 通过环境变量设置：
-
-```bash
-export ZCORE_LLM_API_KEY="***"
-```
-
-## 架构
-
-Z-Core 由 **10 个独立引擎** 构成，全部通过 `RuntimePaths` 依赖注入：
-
-```
-引擎                  职责
-─────────────────     ──────────────────────────────
-GhostAgent            👻 生成 / 可用性检查 / 三级降级（大脑）
-ContextEngine         分析 / 压缩 / 预裁剪
-MemoryEngine          提取 / 写入 / 搜索 / 去重 / 过期
-SessionManager        开始 / 结束 / 暂停 / 恢复 / 交接 / 清理
-SkillRouter           发现 / 匹配 / 执行 / 安装 / 验证
-PermissionEngine      检查 / 添加规则 / 审计报告
-ObservabilityEngine   记录执行 / 记录成本 / 统计 / 健康检查
-AgentSetupEngine      检测 / 配置 / 注入
-McpEngine             注册 / 对比 / 同步到各 Agent
-WorkflowEngine        发现 / 校验 / 执行
-```
-
-**核心设计原则：**
-- **零外部依赖** — 仅使用 Python 3.11+ 标准库
-- **无常驻进程** — 纯 CLI 工具，调用间无状态
-- **Agent 无关** — 适配任何终端原生 AI Agent
-- **Ghost Agent** — 自主廉价 LLM 后端，负责压缩/提取（见上文）
-
-## 项目结构
+## 📁 项目结构
 
 ```
 Z-Core/
 ├── zcore/                  # Python 包
 │   ├── cli/main.py         #   argparse CLI（40 个命令）
 │   ├── engines/            #   10 个引擎
-│   ├── models/             #   数据模型（Skill、Session、Memory、Workflow、MCP）
+│   ├── models/             #   数据模型
 │   ├── hooks/              #   生命周期 Hook 框架
 │   ├── utils/              #   Token 估算、FileLock、脱敏
 │   ├── prompts/            #   LLM Prompt 模板
@@ -307,18 +321,22 @@ Z-Core/
 ├── tests/                  # 50 个单元测试
 ├── docs/                   # 教程与发布说明
 ├── v2/                     # 设计文档、RFC、项目管理
-├── pyproject.toml          # 包配置（pip 可安装）
+├── pyproject.toml          # 包配置
 └── LICENSE                 # MIT
 ```
 
-## 测试
+---
+
+## 🧪 测试
 
 ```bash
 python -m unittest discover tests -v    # 完整测试
 python -m unittest discover tests -q    # 快速验证
 ```
 
-## 设计文档
+---
+
+## 📚 设计文档
 
 | 文档 | 内容 |
 |------|------|
@@ -328,14 +346,14 @@ python -m unittest discover tests -q    # 快速验证
 | [会话管理](v2/design/session-manager.md) | 生命周期、交接、暂停/恢复 |
 | [技能路由](v2/design/skill-router.md) | 三层路由与编排 |
 | [治理引擎](v2/design/governance.md) | 权限规则与 Hook 框架 |
-| [产品战略](v2/design/product-strategy.md) | 愿景与定位 |
+| [上下文引擎](v2/design/context-engine.md) | Token 分析与压缩 |
+| [CLI 设计](v2/design/cli.md) | 命令接口规格 |
+| [Ghost Agent 深度审查](v2/design/ghost-agent-deep-review.md) | 10 维度架构评估 |
 | [0.2.0 发布说明](docs/release-0.2.0.md) | 独立抽离基线 |
 
-## 项目来源
+---
 
-Z-Core 最初来自 [KitClaw](https://github.com/cloud99277/KitClaw) 的 V2 运行时抽离，现作为独立仓库维护。可独立使用，也可与 KitClaw 配合。
-
-## 参与贡献
+## 🙏 参与贡献
 
 欢迎 Issue 和 PR。核心原则：
 
@@ -354,6 +372,16 @@ python -m compileall zcore tests
 python -m unittest discover tests -v
 ```
 
-## 许可证
+---
+
+## 📄 许可证
 
 [MIT](LICENSE)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [Cloud927](https://github.com/cloud99277)**
+
+</div>
