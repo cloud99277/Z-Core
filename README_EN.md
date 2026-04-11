@@ -47,12 +47,16 @@ Claude Code, Gemini CLI, Codex CLI — each one is powerful, but none of them re
 git clone <repo-url> Z-Core && cd Z-Core
 pip install -e .
 
+# Optional: enable L3 knowledge retrieval
+pip install -e ".[rag]"
+
 # Verify
 zcore --version
 # → zcore 0.2.0
 ```
 
 Python ≥3.11. Zero external dependencies — stdlib only.
+RAG/L3 support is optional and installed separately via `zcore[rag]`.
 
 ---
 
@@ -198,6 +202,10 @@ zcore memory search --query "keyword"
 zcore memory write "important fact" --topic <topic>
 zcore memory extract --input messages.json --model <model>
 
+# Knowledge (optional `zcore[rag]`)
+zcore knowledge index --path /path/to/knowledge
+zcore knowledge search --query "architecture decisions" --json
+
 # Agent setup
 zcore setup detect      # Which agents are installed?
 zcore setup all         # Configure all at once
@@ -210,6 +218,7 @@ zcore mcp sync --dry-run
 All commands support `--json` for structured output. Agents should always use it.
 
 → **[Getting Started Guide (with real output)](docs/getting-started.md)**
+→ **[RAG Setup Guide](docs/rag-setup.md)**
 
 ---
 
@@ -377,6 +386,14 @@ pip install -e ".[dev]"
 python -m compileall zcore tests
 python -m unittest discover tests -v
 ```
+
+---
+
+## 📦 Relationship with KitClaw
+
+**Z-Core is the direct successor and complete replacement for [KitClaw](https://github.com/cloud99277/KitClaw).** First-generation KitClaw has been officially deprecated and archived.
+Z-Core absorbs 100% of the previous baseline (including memory, core skills, and RAG capabilities) into a single, cohesive engine, while adding modern features like the Ghost Agent, a unified CLI namespace, global MCP management, and workflow routing.
+A single `pip install zcore` is now everything you need. You no longer need to clone standalone bash repositories.
 
 ---
 

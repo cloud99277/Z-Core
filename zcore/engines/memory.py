@@ -314,6 +314,40 @@ class MemoryEngine:
         results.sort(key=lambda entry: (needle in entry.content.lower(), entry.updated_at), reverse=True)
         return results[:limit]
 
+    def search_all(self, query: str, *, limit: int = 10) -> dict[str, object]:
+        payload: dict[str, object] = {
+            "query": query,
+            "l2": [entry.to_dict() for entry in self.search(query, limit=limit)],
+            "l3": [],
+            "meta": {
+                "l3_status": "unavailable",
+                "warnings": [],
+            },
+        }
+        try:
+            from zcore.rag import RagDependencyError, search_knowledge
+        except ImportError as exc:
+            payload["meta"]["warnings"].append(str(exc))
+            return payload
+
+        try:
+            l3_results = search_knowledge(query, limit=limit, paths=self.paths, config=self.config)
+        except RagDependencyError as exc:
+            payload["meta"]["warnings"].append(str(exc))
+            return payload
+        except FileNotFoundError as exc:
+            payload["meta"]["warnings"].append(str(exc))
+            payload["meta"]["l3_status"] = "missing_index"
+            return payload
+        except Exception as exc:
+            payload["meta"]["warnings"].append(f"L3 search skipped: {exc}")
+            payload["meta"]["l3_status"] = "error"
+            return payload
+
+        payload["l3"] = [result.to_dict() for result in l3_results]
+        payload["meta"]["l3_status"] = "available"
+        return payload
+
     def list_pending(self) -> list[dict[str, object]]:
         if not self.pending_path.exists():
             return []
