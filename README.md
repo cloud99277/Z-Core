@@ -370,6 +370,8 @@ pip install -e ".[dev]"
 # 提交前
 python -m compileall zcore tests
 python -m unittest discover tests -v
+```
+
 ---
 
 ## 📦 与 KitClaw 的关系
