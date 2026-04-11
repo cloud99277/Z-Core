@@ -18,19 +18,19 @@
 
 ## ✨ 特点
 
-Claude Code、Gemini CLI、Codex CLI — 每个都很强，但会话一关什么都不记得。它们之间无法共享上下文，也无法交接工作。
+Claude Code、Gemini CLI、Codex CLI — 每个都很强，但会话一关什么都不记得，也没法无缝使用各种复杂的终端技能。
 
-**Z-Core 是 Agent 之间的缺失层。** 一个 CLI 给所有 Agent 加上：
+**Z-Core 作为 KitClaw 的终极演进形态（V2）**，通过单一 CLI 补齐了 Agent 在本地开发中所缺失的全部运行时基建：
 
 - 👻 **Ghost Agent** — 在会话间隙自主思考的 LLM 后端（Z-Core 的灵魂）
-- 🧠 **记忆** — 跨会话持久化，按主题存储、自动提取、智能去重
-- 🔄 **会话** — 生命周期管理、暂停/恢复、跨 Agent 交接
-- 📋 **上下文** — Token 分析、自动压缩
-- 🔧 **技能** — 三层智能路由、治理 Hook、安装/验证
-- 🛡️ **治理** — 权限规则、危险 Shell 检测、执行审计
-- 🔌 **MCP 管理** — 一处注册 MCP Server，同步到所有 Agent
-- 📊 **可观测性** — 执行统计、成本追踪、健康报告
-- 🤖 **Agent 自动配置** — 自动注入指令到 Claude/Gemini/Codex 配置
+- 🧠 **三层记忆** — L1 身份 / L2 白板跨会话去重与提取，并集成可选的 **RAG 向量引擎** 支持 L3 知识库
+- 🔄 **会话** — 生命周期管理、暂停/恢复、跨 Agent 工作交接
+- 📋 **上下文** — Token 分析、超限自动防爆裁剪
+- 🔧 **技能体系** — **内置 17 个高质量核心 Skill**，支持依赖注入、工作流编排和三层路由
+- 🛡️ **治理** — 权限规则守门、危险 Shell 检测拦截、执行开销审计
+- 🔌 **MCP 管理** — 一处注册 MCP Server，同步到所有主流 Agent
+- 📊 **可观测性** — 可视化执行追踪、Token 成本追踪、Agent 健康报告
+- 🤖 **自动配置** — 无侵入自动注入指令到 Claude/Gemini/Codex 配置文件
 
 ### 核心设计原则
 
@@ -193,16 +193,16 @@ zcore session start --project <名称> --agent <agent>
 zcore session end --session-id <id> --messages <文件>
 zcore session pause / resume / handoff
 
-# 记忆
+# 记忆与知识 (L2/L3)
 zcore memory search --query "关键词"
 zcore memory write "重要事实" --topic <主题>
-zcore memory extract --input messages.json --model <模型>
+zcore knowledge index             # 需要 zcore[rag]
+zcore knowledge search            # 混合语义检索
 
-# Agent 配置
-zcore setup detect      # 检测已安装的 Agent
-zcore setup all         # 一键配置所有
-
-# MCP
+# 技能与插件 (Skills / MCP)
+zcore skill list --available      # 列出内置的 17 个核心功能
+zcore skill install --core        # 一键安装
+zcore run <skill-name>            # 执行技能
 zcore mcp add filesystem --command npx --args "-y,@mcp/server-filesystem,/tmp"
 zcore mcp sync --dry-run
 ```

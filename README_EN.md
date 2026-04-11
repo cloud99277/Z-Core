@@ -17,20 +17,19 @@
 ---
 
 ## ✨ Features
+Claude Code, Gemini CLI, Codex CLI — each one is powerful, but they share the same isolated weaknesses: session amnesia and poor native extensibility.
 
-Claude Code, Gemini CLI, Codex CLI — each one is powerful, but none of them remember anything after the session ends. They can't share context. They can't hand off work to each other.
-
-**Z-Core is the missing layer between your agents.** A single CLI that gives any agent:
+**Z-Core is the ultimate evolution of KitClaw (V2).** It is an all-in-one CLI that provides the missing infrastructure layer for your local AI agents:
 
 - 👻 **Ghost Agent** — autonomous LLM backend that thinks between sessions (the soul of Z-Core)
-- 🧠 **Memory** — cross-session persistence with topic storage, auto-extraction, deduplication
+- 🧠 **Three-Layer Memory** — L1 identity, L2 topic whiteboards, and an **optional built-in RAG engine** for L3 semantic retrieval
 - 🔄 **Sessions** — lifecycle management, pause/resume, cross-agent handoff
-- 📋 **Context** — token analysis, automatic compaction
-- 🔧 **Skills** — three-layer intelligent routing, governance hooks, install/validate
-- 🛡️ **Governance** — permission rules, dangerous shell detection, execution audit
-- 🔌 **MCP Management** — register MCP servers once, sync to all agents
-- 📊 **Observability** — execution stats, cost tracking, health reports
-- 🤖 **Agent Auto-Setup** — injects instructions into Claude/Gemini/Codex configs automatically
+- 📋 **Context** — token analysis, automatic safe compaction
+- 🔧 **Skill Ecosystem** — **Bundles 17 curated core skills**, orchestrating them with intelligent multi-layer routing
+- 🛡️ **Governance** — permission rules, dangerous shell detection, runtime hooks
+- 🔌 **MCP Management** — register MCP servers once, sync to all agents automatically
+- 📊 **Observability** — execution stats, cost tracking, health checkups
+- 🤖 **Agent Auto-Setup** — seamlessly injects managed instructions into your agent configurations
 
 ### Core Design Principles
 
@@ -197,14 +196,16 @@ zcore session start --project <name> --agent <agent>
 zcore session end --session-id <id> --messages <file>
 zcore session pause / resume / handoff
 
-# Memory
+# Memory & Knowledge (L2/L3)
 zcore memory search --query "keyword"
 zcore memory write "important fact" --topic <topic>
-zcore memory extract --input messages.json --model <model>
+zcore knowledge index             # requires zcore[rag]
+zcore knowledge search            # hybrid semantic retrieval
 
-# Knowledge (optional `zcore[rag]`)
-zcore knowledge index --path /path/to/knowledge
-zcore knowledge search --query "architecture decisions" --json
+# Skills & Plugins (MCP)
+zcore skill list --available      # view the 17 bundled core skills
+zcore skill install --core        # install core skills
+zcore run <skill-name>            # execute a skill
 
 # Agent setup
 zcore setup detect      # Which agents are installed?
