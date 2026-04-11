@@ -1,8 +1,8 @@
 ---
 project: Z-Core-V2
-stage: Phase 6 — 已完成，V2 进入维护模式
+stage: V2 补完计划完成，Z-Core 作为统一官方接棒人
 owner: yangyy
-last_updated: 2026-04-10
+last_updated: 2026-04-11
 status_source: single-source-of-truth
 ---
 
@@ -10,7 +10,7 @@ status_source: single-source-of-truth
 
 ## 当前阶段目标
 
-关闭 V2 全部 CLI 缺口（35/35 = 100%），交付 Workflow Engine（最后一个架构设计中的 Engine），补全 session pause/resume 和 memory expire-check，打包为 `pip install` 可用的标准 Python 包。Phase 6 之后 V2 进入维护模式。
+全量接收原 KitClaw 的 `17 core skills` 与 `RAG(knowledge)` 模块，消灭功能代差并正式废弃原 KitClaw 仓库。目前已达成 V2 Complete Upgrade 的全部战略（Phase A/B/C 均 100% 达成），系统重归稳定维护与交付状态。
 
 ## 本阶段成功标准
 
@@ -35,27 +35,20 @@ status_source: single-source-of-truth
 
 ## 已完成
 
-- [x] Phase 0 全部（CLI skeleton, runtime bootstrap）
-- [x] Phase 1 全部（Context Engine, Ghost Agent real API, Session enhancements）
-- [x] Phase 2 全部（Memory Engine, auto-extraction, dedup, topics, migration）
-- [x] Phase 3 全部（Skill Router, Governance Engine, Hook Framework）
-- [x] Phase 4 全部（Observability Engine, Agent Setup, Config CLI, Governance extensions）
-- [x] Phase 5 全部（CLI Completeness — Skill/Session/Memory/Audit + Test Cleanup）
-- [x] 29 测试通过，6 个 Phase 审查报告存档
-- [x] PM 管理体系精简（6→5 文件）
-- [x] `delegated-sprint` skill 建立
-- [x] CLI 覆盖率 89%（31/35）
-- [x] Phase 6 完成，39/39 测试通过
-- [x] Editable install 在虚拟环境中验证通过，`zcore 0.2.0`
+- [x] Phase 0 - Phase 6 全部功能及收尾
+- [x] 独立安装包就绪（`zcore 0.2.0`）及 MCP 功能
+- [x] **V2 补完计划全量达成** (V2 Complete Upgrade Strategy)：
+  - [x] Phase A：内化 17 个 Core Skill（`Z-Core/skills/core`）并新增 `install --core` / `--available`
+  - [x] Phase B：优雅内置可选 RAG 包并集成 `zcore knowledge index/search`
+  - [x] Phase C：全面宣布前代仓库终结，确立唯一事实标准
 
 ## 阻塞点
 
-无当前阻塞点；进入维护模式，等待独立审查。
+无。
 
 ## 当前最大风险
 
-- 系统 Python 启用了 PEP 668，editable install 需在虚拟环境内验证；已用项目本地 venv 完成验证
-- Workflow Engine 首版执行器采用串行 subprocess 模型，复杂条件分支/变量编排留给 V3
+- 后续迭代应避免再次违背“Z-Core 作为统一承载实体”的设计原则。
 
 ## 最新决策
 

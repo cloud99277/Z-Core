@@ -1,7 +1,7 @@
 # Z-Core V2 完整升级战略
 
 > **决策日期：** 2026-04-11  
-> **状态：** In-Progress（Phase A 已完成，Phase B/C 待执行）  
+> **状态：** Completed（Phase A/B/C 已全部落地，KitClaw 已成功归档被替代）  
 > **影响范围：** 产品定位、架构、用户体验、KitClaw 关系
 
 ---

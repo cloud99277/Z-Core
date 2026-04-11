@@ -1,5 +1,17 @@
 # Decision Log
 
+## [2026-04-11] 正式归档 KitClaw，将其余特性并入 Z-Core
+
+**决策：**
+- 彻底废弃分离式中间件（Standalone Middleware）概念，将 Z-Core 升级为 唯一入口的 KitClaw 迭代品（V2）。
+- 吸收 17 个 Core Skill 与 RAG 能力，提供统一的命令空间与包管理体验 (`zcore skill install --core`, `zcore[rag]`)。
+
+**原因：**
+- 分离状态削弱了两侧的使用者体验，双面维护徒增工作负荷，严重违背 All-in-One 一致性初衷。
+
+**影响：**
+- KitClaw 仓库结束其生命周期，标记为 `Deprecated`。
+- Z-Core 获得完全统治力及原先欠缺的具体功能包。
 ## [2026-04-07] PM 体系初始化
 
 **决策：** 采用 6 文件 PM 管理体系。

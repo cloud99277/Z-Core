@@ -24,6 +24,7 @@ from zcore.engines.observability import ObservabilityEngine
 from zcore.engines.router import SkillRouter
 from zcore.engines.session import SessionManager
 from zcore.engines.workflow import WorkflowEngine
+from zcore.models.memory import MemoryEntry
 from zcore.runtime import RuntimePaths
 
 
@@ -77,6 +78,18 @@ def _build_parser() -> argparse.ArgumentParser:
     memory_search.add_argument("--query", required=True)
     memory_search.add_argument("--limit", type=int, default=10)
     memory_search.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    knowledge_parser = subparsers.add_parser("knowledge", help="Knowledge index and semantic search")
+    knowledge_subparsers = knowledge_parser.add_subparsers(dest="knowledge_command", required=True)
+
+    knowledge_search = knowledge_subparsers.add_parser("search", help="Search the knowledge index")
+    knowledge_search.add_argument("--query", required=True)
+    knowledge_search.add_argument("--limit", type=int, default=10)
+    knowledge_search.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    knowledge_index = knowledge_subparsers.add_parser("index", help="Build or refresh the knowledge index")
+    knowledge_index.add_argument("--path")
+    knowledge_index.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     memory_write = memory_subparsers.add_parser("write", help="Write a memory entry directly")
     memory_write.add_argument("content")
@@ -451,6 +464,19 @@ def _normalize_argv(argv: list[str] | None) -> list[str] | None:
     return normalized
 
 
+def _friendly_import_error(exc: Exception) -> str:
+    return str(exc) or "Optional dependency missing. Install `zcore[rag]`."
+
+
+def _resolve_knowledge_source(paths: RuntimePaths, config: dict[str, object], explicit_path: str | None) -> str | None:
+    if explicit_path:
+        return explicit_path
+    source_dir = get_nested(config, "knowledge", "source_dir", default="")
+    if isinstance(source_dir, str) and source_dir.strip():
+        return source_dir.strip()
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     raw_argv = argv if argv is not None else sys.argv[1:]
@@ -559,13 +585,21 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.memory_command == "search":
-            entries = engine.search(args.query, limit=args.limit)
-            payload = [entry.to_dict() for entry in entries]
+            payload = engine.search_all(args.query, limit=args.limit)
             if args.json:
                 print(json.dumps(payload, ensure_ascii=False))
             else:
-                for entry in entries:
+                for item in payload["l2"]:
+                    entry = MemoryEntry.from_dict(item)
                     print(entry.to_markdown_line())
+                if payload["l3"]:
+                    print("\n[L3]")
+                    for result in payload["l3"]:
+                        print(f"- {result.get('source_file', '')} {result.get('line_range', '')}")
+                        print(f"  {result.get('text', '')[:160]}")
+                elif payload["meta"]["warnings"]:
+                    for warning in payload["meta"]["warnings"]:
+                        print(f"[L3 skipped] {warning}")
             return 0
 
         if args.memory_command == "write":
@@ -630,6 +664,79 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(f"Migrated {payload['migrated']} memories across {len(payload['topics'])} topics")
         return 0
+
+    if args.command == "knowledge":
+        config = load_config(paths)
+        if args.knowledge_command == "search":
+            try:
+                from zcore.rag import search_knowledge
+            except ImportError as exc:
+                payload = {"ok": False, "error": _friendly_import_error(exc)}
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    print(payload["error"], file=sys.stderr)
+                return 1
+
+            try:
+                payload = [item.to_dict() for item in search_knowledge(args.query, limit=args.limit, paths=paths, config=config)]
+            except Exception as exc:
+                payload = {"ok": False, "error": _friendly_import_error(exc)}
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    print(payload["error"], file=sys.stderr)
+                return 1
+
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                for result in payload:
+                    print(f"{result['source_file']} {result['line_range']}")
+                    print(result["text"])
+            return 0
+
+        if args.knowledge_command == "index":
+            source_dir = _resolve_knowledge_source(paths, config, args.path)
+            if not source_dir:
+                payload = {
+                    "ok": False,
+                    "error": "Knowledge source directory not configured. Pass `--path` or set `knowledge.source_dir`.",
+                }
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    print(payload["error"], file=sys.stderr)
+                return 1
+
+            try:
+                from zcore.rag import index_knowledge
+            except ImportError as exc:
+                payload = {"ok": False, "error": _friendly_import_error(exc)}
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    print(payload["error"], file=sys.stderr)
+                return 1
+
+            try:
+                payload = index_knowledge(source_dir=source_dir, paths=paths, config=config)
+            except Exception as exc:
+                payload = {"ok": False, "error": _friendly_import_error(exc)}
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    print(payload["error"], file=sys.stderr)
+                return 1
+
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print(
+                    f"Indexed {payload['indexed_chunks']} chunks from {payload['indexed_files']} files into "
+                    f"{payload['db_path']}"
+                )
+            return 0
 
     if args.command == "session":
         manager = SessionManager(paths)

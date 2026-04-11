@@ -93,3 +93,14 @@
   - ✅ 新增 `SkillRouter.uninstall_skill()` — 安全移除已安装 skill
   - ✅ CLI 扩展：`zcore skill list --available`、`zcore skill install --core`、`zcore skill uninstall`
   - ✅ 新增 `tests/test_skill_core.py` 7 个测试，全量回归 57/57 通过
+- ✅ **V2 补完 Phase B：RAG 引擎可选集成**
+  - ✅ 迁移 `knowledge_index.py`, `knowledge_search.py`, `md_chunker.py` 到 `zcore/rag/`
+  - ✅ `pyproject.toml` 注册 `[project.optional-dependencies] rag`
+  - ✅ 优雅降级代理：如果 `import lancedb` 失败则友好提示需 `pip install zcore[rag]`，而不崩溃
+  - ✅ 新增 `zcore knowledge search / index` CLI 等效替代 shell 版
+  - ✅ MemoryEngine.search_all L2+L3 混合感知适配，并无感知降级
+  - ✅ 增加 `@unittest.skipIf(not rag_available)` 条件测试环境
+- ✅ **V2 补完 Phase C：归档与文档统一**
+  - ✅ README/README_CN 修改，宣告从"派生运行时"全面上位为"100% 替代者"
+  - ✅ KitClaw 仓库添加 `🔴 DEPRECATED` 横幅并宣告归档
+  - ✅ 新增迁移指南 `docs/migration-from-kitclaw.md` 铺平使用门槛
