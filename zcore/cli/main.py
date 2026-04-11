@@ -197,6 +197,7 @@ def _build_parser() -> argparse.ArgumentParser:
     skill_subparsers = skill_parser.add_subparsers(dest="skill_command", required=True)
 
     skill_list = skill_subparsers.add_parser("list", help="List discovered skills")
+    skill_list.add_argument("--available", action="store_true", help="Show bundled core skills and their install status")
     skill_list.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     skill_match = skill_subparsers.add_parser("match", help="Match skills for a query")
@@ -210,11 +211,16 @@ def _build_parser() -> argparse.ArgumentParser:
     skill_info.add_argument("name")
     skill_info.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
-    skill_install = skill_subparsers.add_parser("install", help="Install a skill from a path or git URL")
-    skill_install.add_argument("source")
+    skill_install = skill_subparsers.add_parser("install", help="Install a skill from a path, git URL, or all core skills")
+    skill_install.add_argument("source", nargs="?", default=None)
+    skill_install.add_argument("--core", action="store_true", help="Install all bundled core skills")
     skill_install.add_argument("--name")
     skill_install.add_argument("--force", action="store_true")
     skill_install.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    skill_uninstall = skill_subparsers.add_parser("uninstall", help="Uninstall a skill")
+    skill_uninstall.add_argument("name")
+    skill_uninstall.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     skill_validate = skill_subparsers.add_parser("validate", help="Validate an installed skill")
     skill_validate.add_argument("name")
@@ -848,13 +854,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "skill":
         router = SkillRouter(paths)
         if args.skill_command == "list":
-            manifests = router.discover()
-            payload = [manifest.to_dict() for manifest in manifests]
-            if args.json:
-                print(json.dumps(payload, ensure_ascii=False))
+            if args.available:
+                payload = router.list_available()
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    for item in payload:
+                        status_icon = "✅" if item["status"] == "installed" else "📦"
+                        print(f"{status_icon} {item['name']}\t{item['status']}\t{item['description'][:60]}")
             else:
-                for manifest in manifests:
-                    print(f"{manifest.name}\t{manifest.source_type}\t{manifest.source_path}")
+                manifests = router.discover()
+                payload = [manifest.to_dict() for manifest in manifests]
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    for manifest in manifests:
+                        print(f"{manifest.name}\t{manifest.source_type}\t{manifest.source_path}")
             return 0
 
         if args.skill_command == "match":
@@ -882,11 +897,31 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{payload['name']}\t{payload['description']}")
             return 0
         if args.skill_command == "install":
-            payload = router.install_skill(args.source, name=args.name, force=args.force)
+            if args.core:
+                payload = router.install_core_skills(force=args.force)
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    for r in payload["results"]:
+                        icon = "✅" if r["status"] == "installed" else ("⏭️" if r["status"] == "already_installed" else "❌")
+                        print(f"{icon} {r['name']}: {r['status']}")
+                    print(f"\nTotal: {payload['total']} | Installed: {payload['installed']} | Skipped: {payload['skipped']} | Errors: {payload['errors']}")
+            elif args.source:
+                payload = router.install_skill(args.source, name=args.name, force=args.force)
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    print(f"Installed skill: {payload['name']}")
+            else:
+                print("Error: provide a source path/URL, or use --core to install all core skills", file=sys.stderr)
+                return 1
+            return 0
+        if args.skill_command == "uninstall":
+            payload = router.uninstall_skill(args.name)
             if args.json:
                 print(json.dumps(payload, ensure_ascii=False))
             else:
-                print(f"Installed skill: {payload['name']}")
+                print(f"Uninstalled skill: {payload['name']}")
             return 0
         if args.skill_command == "validate":
             payload = router.validate_skill(args.name)

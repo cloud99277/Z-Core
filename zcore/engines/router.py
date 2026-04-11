@@ -16,6 +16,11 @@ from zcore.paths import repo_root
 from zcore.runtime import RuntimePaths
 
 
+def _bundled_skills_dir() -> Path:
+    """Return the path to skills/core/ bundled with the Z-Core repo."""
+    return repo_root() / "skills" / "core"
+
+
 @dataclass
 class SkillMatch:
     manifest: SkillManifest
@@ -211,6 +216,72 @@ class SkillRouter:
         if manifest is None:
             raise ValueError(f"Unknown skill: {skill_name}")
         return manifest
+
+    def list_available(self) -> list[dict[str, Any]]:
+        """List core skills bundled with Z-Core that are not yet installed."""
+        bundled = _bundled_skills_dir()
+        if not bundled.exists():
+            return []
+        installed_names = {m.name for m in self.discover()}
+        available: list[dict[str, Any]] = []
+        for skill_md in sorted(bundled.glob("*/SKILL.md")):
+            try:
+                manifest = SkillManifest.from_skill_md(skill_md, source_type="bundled")
+            except Exception:
+                manifest = SkillManifest(
+                    name=skill_md.parent.name,
+                    source_path=str(skill_md),
+                    source_type="bundled",
+                )
+            status = "installed" if manifest.name in installed_names else "available"
+            available.append({
+                "name": manifest.name,
+                "description": manifest.description,
+                "source_path": str(skill_md.parent),
+                "status": status,
+            })
+        return available
+
+    def install_core_skills(self, *, force: bool = False) -> dict[str, Any]:
+        """Install all bundled core skills from skills/core/ into ~/.ai-skills/."""
+        bundled = _bundled_skills_dir()
+        if not bundled.exists():
+            raise FileNotFoundError(f"Bundled skills directory not found: {bundled}")
+        results: list[dict[str, Any]] = []
+        for skill_dir in sorted(bundled.iterdir()):
+            if not skill_dir.is_dir() or not (skill_dir / "SKILL.md").exists():
+                continue
+            try:
+                result = self.install_skill(str(skill_dir), force=force)
+                results.append({"name": result["name"], "status": "installed"})
+            except FileExistsError:
+                results.append({"name": skill_dir.name, "status": "already_installed"})
+            except Exception as exc:
+                results.append({"name": skill_dir.name, "status": "error", "error": str(exc)})
+        installed = sum(1 for r in results if r["status"] == "installed")
+        skipped = sum(1 for r in results if r["status"] == "already_installed")
+        errors = sum(1 for r in results if r["status"] == "error")
+        return {
+            "ok": errors == 0,
+            "total": len(results),
+            "installed": installed,
+            "skipped": skipped,
+            "errors": errors,
+            "results": results,
+        }
+
+    def uninstall_skill(self, skill_name: str) -> dict[str, Any]:
+        """Remove an installed skill from ~/.ai-skills/."""
+        target = self.runtime_paths.skills_dir / skill_name
+        if not target.exists():
+            raise FileNotFoundError(f"Skill not installed: {skill_name}")
+        shutil.rmtree(target)
+        self._cache = None
+        return {
+            "ok": True,
+            "name": skill_name,
+            "removed_path": str(target),
+        }
 
     def install_skill(self, source: str, *, name: str | None = None, force: bool = False) -> dict[str, Any]:
         self.runtime_paths.ensure_runtime_dirs()

@@ -86,3 +86,10 @@
 - ✅ MCP 管理功能交付：新增 `zcore mcp list/add/remove/sync/diff`，支持统一注册 MCP Server 并同步到 Claude/Gemini/Codex 配置
 - ✅ 新增 `McpEngine` + `McpServer`/`McpSyncResult` 数据模型，`~/.zcore/mcp-servers.toml` 作为 single source of truth
 - ✅ MCP 回归测试完成：新增 `tests/test_mcp.py` 11 个用例，全量回归更新为 `50` 个测试通过
+- ✅ **V2 补完 Phase A：Skills 迁移与管理增强**
+  - ✅ 复制 17 个核心 Skills 从 KitClaw 仓库到 `Z-Core/skills/core/`
+  - ✅ 新增 `SkillRouter.list_available()` — 列出 bundled skills 及安装状态
+  - ✅ 新增 `SkillRouter.install_core_skills()` — 批量安装全部核心 skills
+  - ✅ 新增 `SkillRouter.uninstall_skill()` — 安全移除已安装 skill
+  - ✅ CLI 扩展：`zcore skill list --available`、`zcore skill install --core`、`zcore skill uninstall`
+  - ✅ 新增 `tests/test_skill_core.py` 7 个测试，全量回归 57/57 通过
