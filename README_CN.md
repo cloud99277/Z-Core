@@ -18,19 +18,19 @@
 
 ## ✨ 特点
 
-Claude Code、Gemini CLI、Codex CLI — 每个都很强，但会话一关什么都不记得。它们之间无法共享上下文，也无法交接工作。
+Claude Code、Gemini CLI、Codex CLI — 每个都很强，但会话一关什么都不记得，也没法无缝使用各种复杂的终端技能。
 
-**Z-Core 是 Agent 之间的缺失层。** 一个 CLI 给所有 Agent 加上：
+**Z-Core 作为 KitClaw 的终极演进形态（V2）**，通过单一 CLI 补齐了 Agent 在本地开发中所缺失的全部运行时基建：
 
 - 👻 **Ghost Agent** — 在会话间隙自主思考的 LLM 后端（Z-Core 的灵魂）
-- 🧠 **记忆** — 跨会话持久化，按主题存储、自动提取、智能去重
-- 🔄 **会话** — 生命周期管理、暂停/恢复、跨 Agent 交接
-- 📋 **上下文** — Token 分析、自动压缩
-- 🔧 **技能** — 三层智能路由、治理 Hook、安装/验证
-- 🛡️ **治理** — 权限规则、危险 Shell 检测、执行审计
-- 🔌 **MCP 管理** — 一处注册 MCP Server，同步到所有 Agent
-- 📊 **可观测性** — 执行统计、成本追踪、健康报告
-- 🤖 **Agent 自动配置** — 自动注入指令到 Claude/Gemini/Codex 配置
+- 🧠 **三层记忆** — L1 身份 / L2 白板跨会话去重与提取，并集成可选的 **RAG 向量引擎** 支持 L3 知识库
+- 🔄 **会话** — 生命周期管理、暂停/恢复、跨 Agent 工作交接
+- 📋 **上下文** — Token 分析、超限自动防爆裁剪
+- 🔧 **技能体系** — **内置 17 个高质量核心 Skill**，支持依赖注入、工作流编排和三层路由
+- 🛡️ **治理** — 权限规则守门、危险 Shell 检测拦截、执行开销审计
+- 🔌 **MCP 管理** — 一处注册 MCP Server，同步到所有主流 Agent
+- 📊 **可观测性** — 可视化执行追踪、Token 成本追踪、Agent 健康报告
+- 🤖 **自动配置** — 无侵入自动注入指令到 Claude/Gemini/Codex 配置文件
 
 ### 核心设计原则
 
@@ -193,16 +193,16 @@ zcore session start --project <名称> --agent <agent>
 zcore session end --session-id <id> --messages <文件>
 zcore session pause / resume / handoff
 
-# 记忆
+# 记忆与知识 (L2/L3)
 zcore memory search --query "关键词"
 zcore memory write "重要事实" --topic <主题>
-zcore memory extract --input messages.json --model <模型>
+zcore knowledge index             # 需要 zcore[rag]
+zcore knowledge search            # 混合语义检索
 
-# Agent 配置
-zcore setup detect      # 检测已安装的 Agent
-zcore setup all         # 一键配置所有
-
-# MCP
+# 技能与插件 (Skills / MCP)
+zcore skill list --available      # 列出内置的 17 个核心功能
+zcore skill install --core        # 一键安装
+zcore run <skill-name>            # 执行技能
 zcore mcp add filesystem --command npx --args "-y,@mcp/server-filesystem,/tmp"
 zcore mcp sync --dry-run
 ```
@@ -370,6 +370,8 @@ pip install -e ".[dev]"
 # 提交前
 python -m compileall zcore tests
 python -m unittest discover tests -v
+```
+
 ---
 
 ## 📦 与 KitClaw 的关系
@@ -377,6 +379,23 @@ python -m unittest discover tests -v
 Z-Core 是 [KitClaw](https://github.com/cloud99277/KitClaw) 的**全面升级与最终继承者**。原 KitClaw 仓库现已正式归档（Archived）。
 Z-Core 在完全保留并内置了前代所有核心 Skill 和知识库（RAG）能力的基础之上，引入了 Ghost Agent 机制、统一的命令空间、全局 MCP 注册表以及高级工作流路由引擎。
 只需安装 Z-Core（`pip install zcore`），即可获得所有能力，不再需要任何外部仓库。
+
+---
+
+## 🌐 生态架构与界限 (FAQ)
+
+随着你的工具栈不断演进，你可能会有以下架构疑问：
+
+**Q1：我平时主要用自带原生记忆的图形化 Agent（如 Antigravity 桌面端等），还需要 Z-Core 吗？**  
+**绝对需要。** Z-Core 在这里充当的是你的**“标准化工兵与重型数据库”**（SOP底座）。图形化大模型虽然聪明，但执行超长构建任务或修改数十个文件时容易“产生幻觉”漏步骤。由于 Z-Core 提供强制的标准组件校验，你的桌面端 AI 能够在后台按部就班分片下发调用命令给 `Z-Core Skill 库` 进行执行而不至于逻辑崩盘。同时，桌面端 AI 需要极速在项目中“大海捞针”时，依然需要借调 `zcore knowledge` 提供的本地 0 依赖 RAG 搜索引擎作为基础中间件。
+
+**Q2：开始每次开发工作时，我都得手敲 `zcore session start/end` 来记考勤吗？**  
+**不需要。** Z-Core 特色正是“极度无感”。只要你执行过一次 `zcore setup all`，Z-Core 便已深度嵌入了你的 Claude / Gemini / Codex 配置系统。当你向 AI 们下达自然语言时，它们都会**在后台自动起挂沙箱、提取上下文**，用完即焚并归档。写在文档里的 CLI 指令，是暴露给开发者在智障卡壳或断电时能进控制台做“紧急手术”的 API 接口集。
+
+**Q3：我的开发群组里还有 OpenClaw（通用网关对接引擎）或 Hermes（消息节点总线），为什么不把它们一并收编进 Z-Core 变成大全家桶？**  
+**为了严格的微服务架构隔离隔离 (Separation of Concerns)。**
+Z-Core 的军舰级护城河是“零依赖、纯 CLI 工具、用完就关、绝对不常驻内存”。这让它在极简系统沙盒、甚至离线服务器里都能当特长兵使用；
+但类似 OpenClaw 等工具由于要接入长网页 socket 和处理高并发消息渠道响应，必然伴随着海量的第三方网络及进程负担乃至服务器权限诉求。一旦整合，Z-Core 的极锐系统设计便会被摧毁。优秀的架构解法是：让它们作为上层网络分发器运行，如果遇到复杂的本机文件检索处理与大模型代码提取事务，甩一条 `--json` JSON 任务给 `Z-Core` 子进程负责求解。
 
 ---
 

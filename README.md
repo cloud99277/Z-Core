@@ -17,20 +17,19 @@
 ---
 
 ## ✨ Features
+Claude Code, Gemini CLI, Codex CLI — each one is powerful, but they share the same isolated weaknesses: session amnesia and poor native extensibility.
 
-Claude Code, Gemini CLI, Codex CLI — each one is powerful, but none of them remember anything after the session ends. They can't share context. They can't hand off work to each other.
-
-**Z-Core is the missing layer between your agents.** A single CLI that gives any agent:
+**Z-Core is the ultimate evolution of KitClaw (V2).** It is an all-in-one CLI that provides the missing infrastructure layer for your local AI agents:
 
 - 👻 **Ghost Agent** — autonomous LLM backend that thinks between sessions (the soul of Z-Core)
-- 🧠 **Memory** — cross-session persistence with topic storage, auto-extraction, deduplication
+- 🧠 **Three-Layer Memory** — L1 identity, L2 topic whiteboards, and an **optional built-in RAG engine** for L3 semantic retrieval
 - 🔄 **Sessions** — lifecycle management, pause/resume, cross-agent handoff
-- 📋 **Context** — token analysis, automatic compaction
-- 🔧 **Skills** — three-layer intelligent routing, governance hooks, install/validate
-- 🛡️ **Governance** — permission rules, dangerous shell detection, execution audit
-- 🔌 **MCP Management** — register MCP servers once, sync to all agents
-- 📊 **Observability** — execution stats, cost tracking, health reports
-- 🤖 **Agent Auto-Setup** — injects instructions into Claude/Gemini/Codex configs automatically
+- 📋 **Context** — token analysis, automatic safe compaction
+- 🔧 **Skill Ecosystem** — **Bundles 17 curated core skills**, orchestrating them with intelligent multi-layer routing
+- 🛡️ **Governance** — permission rules, dangerous shell detection, runtime hooks
+- 🔌 **MCP Management** — register MCP servers once, sync to all agents automatically
+- 📊 **Observability** — execution stats, cost tracking, health checkups
+- 🤖 **Agent Auto-Setup** — seamlessly injects managed instructions into your agent configurations
 
 ### Core Design Principles
 
@@ -197,14 +196,16 @@ zcore session start --project <name> --agent <agent>
 zcore session end --session-id <id> --messages <file>
 zcore session pause / resume / handoff
 
-# Memory
+# Memory & Knowledge (L2/L3)
 zcore memory search --query "keyword"
 zcore memory write "important fact" --topic <topic>
-zcore memory extract --input messages.json --model <model>
+zcore knowledge index             # requires zcore[rag]
+zcore knowledge search            # hybrid semantic retrieval
 
-# Knowledge (optional `zcore[rag]`)
-zcore knowledge index --path /path/to/knowledge
-zcore knowledge search --query "architecture decisions" --json
+# Skills & Plugins (MCP)
+zcore skill list --available      # view the 17 bundled core skills
+zcore skill install --core        # install core skills
+zcore run <skill-name>            # execute a skill
 
 # Agent setup
 zcore setup detect      # Which agents are installed?
@@ -394,6 +395,23 @@ python -m unittest discover tests -v
 **Z-Core is the direct successor and complete replacement for [KitClaw](https://github.com/cloud99277/KitClaw).** First-generation KitClaw has been officially deprecated and archived.
 Z-Core absorbs 100% of the previous baseline (including memory, core skills, and RAG capabilities) into a single, cohesive engine, while adding modern features like the Ghost Agent, a unified CLI namespace, global MCP management, and workflow routing.
 A single `pip install zcore` is now everything you need. You no longer need to clone standalone bash repositories.
+
+---
+
+## 🌐 Ecosystem Architecture & Boundaries (FAQ)
+
+As your AI toolchain grows, you might have the following architectural questions:
+
+**Q1: I mostly use GUI-based Agents with innate memory (e.g., Antigravity Desktop, Cursor). Do I still need Z-Core?**  
+**Absolutely.** Z-Core acts as your **"Standardized Orchestrator & Heavy Database"** (SOP backend). Even though graphical LLMs are smart, they are prone to hallucinations and skipped steps when executing extremely long build tasks or refactoring dozens of files. Because Z-Core provides robust, validated components, your GUI agent can dispatch commands piece by piece to the `Z-Core Skill Library` in the background without losing logical tracking. Furthermore, when your desktop AI needs to search for needles in a haystack across your project, it still relies on `zcore knowledge` as a frictionless, zero-dependency RAG engine middleware.
+
+**Q2: Do I have to manually type `zcore session start/end` every time I begin working to log my state?**  
+**No.** The hallmark of Z-Core is its "invisible orchestration." Once you run `zcore setup all`, Z-Core deeply hooks into your Claude / Gemini / Codex configuration systems. When you give natural language instructions to your AI, they will **automatically spin up sandboxes and extract context in the background**, seamlessly discarding overhead and archiving memory when done. The explicit CLI commands documented here are merely APIs exposed for developers to intervene or perform "emergency surgery" during edge cases.
+
+**Q3: My stack includes OpenClaw (gateway bridging engine) or Hermes (message bus daemon). Why not integrate them into Z-Core to create a massive all-in-one suite?**  
+**Strict separation of concerns.**
+Z-Core's ultimate moat is its "zero-dependency, pure CLI nature, zero daemon, and zero memory footprint." This allows it to act as an elite operative dropping into primitive sandboxes or isolated offline servers instantly.
+Conversely, tools like OpenClaw must handle long-lived WebSockets, high-concurrency channel responses, and massive 3rd-party network packages. Coupling them would destroy Z-Core's razor-sharp design. The superior architectural pattern is to run them as top-layer network routers; when they require complex local file searches or LLM code extractions, they simply fire a `--json` subprocess task to `Z-Core` to fetch the answer.
 
 ---
 
