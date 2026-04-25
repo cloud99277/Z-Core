@@ -402,13 +402,13 @@ A single `pip install zcore` is now everything you need. You no longer need to c
 
 As your AI toolchain grows, you might have the following architectural questions:
 
-**Q1: I mostly use GUI-based Agents with innate memory (e.g., Antigravity Desktop, Cursor). Do I still need Z-Core?**  
+**Q1: I mostly use GUI-based Agents with innate memory (e.g., Antigravity Desktop, Cursor). Do I still need Z-Core?**
 **Absolutely.** Z-Core acts as your **"Standardized Orchestrator & Heavy Database"** (SOP backend). Even though graphical LLMs are smart, they are prone to hallucinations and skipped steps when executing extremely long build tasks or refactoring dozens of files. Because Z-Core provides robust, validated components, your GUI agent can dispatch commands piece by piece to the `Z-Core Skill Library` in the background without losing logical tracking. Furthermore, when your desktop AI needs to search for needles in a haystack across your project, it still relies on `zcore knowledge` as a frictionless, zero-dependency RAG engine middleware.
 
-**Q2: Do I have to manually type `zcore session start/end` every time I begin working to log my state?**  
+**Q2: Do I have to manually type `zcore session start/end` every time I begin working to log my state?**
 **No.** The hallmark of Z-Core is its "invisible orchestration." Once you run `zcore setup all`, Z-Core deeply hooks into your Claude / Gemini / Codex configuration systems. When you give natural language instructions to your AI, they will **automatically spin up sandboxes and extract context in the background**, seamlessly discarding overhead and archiving memory when done. The explicit CLI commands documented here are merely APIs exposed for developers to intervene or perform "emergency surgery" during edge cases.
 
-**Q3: My stack includes OpenClaw (gateway bridging engine) or Hermes (message bus daemon). Why not integrate them into Z-Core to create a massive all-in-one suite?**  
+**Q3: My stack includes OpenClaw (gateway bridging engine) or Hermes (message bus daemon). Why not integrate them into Z-Core to create a massive all-in-one suite?**
 **Strict separation of concerns.**
 Z-Core's ultimate moat is its "zero-dependency, pure CLI nature, zero daemon, and zero memory footprint." This allows it to act as an elite operative dropping into primitive sandboxes or isolated offline servers instantly.
 Conversely, tools like OpenClaw must handle long-lived WebSockets, high-concurrency channel responses, and massive 3rd-party network packages. Coupling them would destroy Z-Core's razor-sharp design. The superior architectural pattern is to run them as top-layer network routers; when they require complex local file searches or LLM code extractions, they simply fire a `--json` subprocess task to `Z-Core` to fetch the answer.
