@@ -31,10 +31,24 @@ def run_zcore(*args: str, home: Path, cwd: Path | None = None) -> subprocess.Com
 class TestHome:
     """Context manager providing an isolated home directory with optional workspace."""
 
+    __test__ = False
+
+    ENV_KEYS = (
+        "HOME",
+        "ZCORE_HOME",
+        "KITCLAW_HOME",
+        "AI_MEMORY_DIR",
+        "AI_SKILLS_DIR",
+        "ZCORE_KNOWLEDGE_DB",
+        "KITCLAW_LLM_API_KEY",
+        "ZCORE_LLM_API_KEY",
+    )
+
     def __init__(self, *, with_workspace: bool = False):
         self._with_workspace = with_workspace
 
     def __enter__(self) -> "TestHome":
+        self._previous_env = {key: os.environ.get(key) for key in self.ENV_KEYS}
         self._tempdir = tempfile.TemporaryDirectory()
         root = Path(self._tempdir.name)
         self.home = root / "home"
@@ -47,6 +61,11 @@ class TestHome:
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
+        for key, value in self._previous_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
         self._tempdir.cleanup()
 
 

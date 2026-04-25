@@ -9,6 +9,8 @@ def test_runtime_paths_follow_home(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
+    monkeypatch.delenv("ZCORE_HOME", raising=False)
+    monkeypatch.delenv("KITCLAW_HOME", raising=False)
     monkeypatch.setenv("AI_MEMORY_DIR", str(home / ".ai-memory"))
     monkeypatch.setenv("AI_SKILLS_DIR", str(home / ".ai-skills"))
 

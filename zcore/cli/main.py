@@ -8,6 +8,7 @@ from pathlib import Path
 from zcore import __version__
 from zcore.config import (
     config_permissions_warning,
+    get_nested,
     init_runtime,
     load_config,
     mask_sensitive_data,
@@ -477,6 +478,13 @@ def _resolve_knowledge_source(paths: RuntimePaths, config: dict[str, object], ex
     return None
 
 
+def _emit_error(message: str, *, json_output: bool) -> None:
+    if json_output:
+        print(json.dumps({"ok": False, "error": message}, ensure_ascii=False))
+    else:
+        print(message, file=sys.stderr)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     raw_argv = argv if argv is not None else sys.argv[1:]
@@ -767,14 +775,23 @@ def main(argv: list[str] | None = None) -> int:
             messages = None
             if args.messages:
                 messages = _load_messages(args.messages)
-            meta = manager.end(
-                args.session_id,
-                messages=messages,
-                ghost_agent=GhostAgent(paths),
-                auto_compact=not args.no_compact,
-                auto_extract_memory=not args.no_extract,
-                model=args.model,
+            config = load_config(paths)
+            auto_compact = bool(get_nested(config, "context", "auto_compact", default=True)) and not args.no_compact
+            auto_extract_memory = (
+                bool(get_nested(config, "memory", "auto_extract", default=True)) and not args.no_extract
             )
+            try:
+                meta = manager.end(
+                    args.session_id,
+                    messages=messages,
+                    ghost_agent=GhostAgent(paths),
+                    auto_compact=auto_compact,
+                    auto_extract_memory=auto_extract_memory,
+                    model=args.model,
+                )
+            except (FileNotFoundError, ValueError) as exc:
+                _emit_error(str(exc), json_output=args.json)
+                return 1
             payload = meta.to_dict()
             if args.json:
                 print(json.dumps(payload, ensure_ascii=False))
@@ -803,7 +820,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.session_command == "show":
-            payload = manager.show_session(args.session_id)
+            try:
+                payload = manager.show_session(args.session_id)
+            except FileNotFoundError as exc:
+                _emit_error(str(exc), json_output=args.json)
+                return 1
             if args.json:
                 print(json.dumps(payload, ensure_ascii=False))
             else:
@@ -819,7 +840,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.session_command == "handoff":
-            document = manager.handoff(args.session_id, args.to, note=args.note)
+            try:
+                document = manager.handoff(args.session_id, args.to, note=args.note)
+            except FileNotFoundError as exc:
+                _emit_error(str(exc), json_output=args.json)
+                return 1
             payload = {
                 "ok": True,
                 "session_id": args.session_id,
@@ -834,7 +859,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.session_command == "pause":
-            meta = manager.pause(session_id=args.session_id)
+            try:
+                meta = manager.pause(session_id=args.session_id)
+            except (FileNotFoundError, ValueError) as exc:
+                _emit_error(str(exc), json_output=args.json)
+                return 1
             payload = meta.to_dict()
             if args.json:
                 print(json.dumps(payload, ensure_ascii=False))
@@ -843,7 +872,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.session_command == "resume":
-            meta = manager.resume(session_id=args.session_id)
+            try:
+                meta = manager.resume(session_id=args.session_id)
+            except (FileNotFoundError, ValueError) as exc:
+                _emit_error(str(exc), json_output=args.json)
+                return 1
             payload = meta.to_dict()
             if args.json:
                 print(json.dumps(payload, ensure_ascii=False))
@@ -871,7 +904,11 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{check['status']}\t{check['check']}\t{check['message']}")
             return code
         if args.workflow_command == "run":
-            result = engine.run_workflow(args.name_or_file, dry_run=args.dry_run)
+            try:
+                result = engine.run_workflow(args.name_or_file, dry_run=args.dry_run)
+            except (FileNotFoundError, ValueError) as exc:
+                _emit_error(str(exc), json_output=args.json)
+                return 1
             payload = result.to_dict()
             code = 0 if payload["overall"] in {"ok", "partial"} else 1
             if args.json:
@@ -1047,7 +1084,11 @@ def main(argv: list[str] | None = None) -> int:
             skill_args["action"] = args.action
         if args.project:
             skill_args["project"] = args.project
-        result = router.execute(args.skill_name, skill_args, session_id=args.session_id)
+        try:
+            result = router.execute(args.skill_name, skill_args, session_id=args.session_id)
+        except ValueError as exc:
+            _emit_error(str(exc), json_output=args.json)
+            return 1
         payload = result.to_dict()
         code = 0 if result.status == "ok" else 1
         if args.json:

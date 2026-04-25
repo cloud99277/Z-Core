@@ -1,0 +1,5 @@
+graft skills/core
+prune skills/core/sync-to-brain/.claude
+global-exclude __pycache__
+global-exclude *.pyc
+global-exclude *.pyo

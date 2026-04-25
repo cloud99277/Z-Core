@@ -1,89 +1,86 @@
-[English](README.md) | [简体中文](README_CN.md)
+[简体中文](README.md) | [English](README_EN.md)
 
 <div align="center">
 
 # 🐾 Z-Core
 
-**Give your AI agents persistent memory, session management, and skill orchestration — zero dependencies, pure CLI.**
+**给你的 AI Agent 装上持久记忆、会话管理与技能编排 — 零依赖，纯 CLI。**
 
 [![Author](https://img.shields.io/badge/Author-Cloud927-blue?style=flat-square)](https://github.com/cloud99277)
 [![Python](https://img.shields.io/badge/Python-≥3.11-blue?style=flat-square)](https://python.org)
-[![Dependencies](https://img.shields.io/badge/Dependencies-0-green?style=flat-square)](#)
-[![Tests](https://img.shields.io/badge/Tests-50%20passing-brightgreen?style=flat-square)](#-testing)
+[![Dependencies](https://img.shields.io/badge/外部依赖-0-green?style=flat-square)](#)
+[![Tests](https://img.shields.io/badge/测试-50%20通过-brightgreen?style=flat-square)](#-测试)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 </div>
 
 ---
 
-## ✨ Features
-Claude Code, Gemini CLI, Codex CLI — each one is powerful, but they share the same isolated weaknesses: session amnesia and poor native extensibility.
+## ✨ 特点
 
-**Z-Core is the ultimate evolution of KitClaw (V2).** It is an all-in-one CLI that provides the missing infrastructure layer for your local AI agents:
+Claude Code、Gemini CLI、Codex CLI — 每个都很强，但会话一关什么都不记得，也没法无缝使用各种复杂的终端技能。
 
-- 👻 **Ghost Agent** — autonomous LLM backend that thinks between sessions (the soul of Z-Core)
-- 🧠 **Three-Layer Memory** — L1 identity, L2 topic whiteboards, and an **optional built-in RAG engine** for L3 semantic retrieval
-- 🔄 **Sessions** — lifecycle management, pause/resume, cross-agent handoff
-- 📋 **Context** — token analysis, automatic safe compaction
-- 🔧 **Skill Ecosystem** — **Bundles 17 curated core skills**, orchestrating them with intelligent multi-layer routing
-- 🛡️ **Governance** — permission rules, dangerous shell detection, runtime hooks
-- 🔌 **MCP Management** — register MCP servers once, sync to all agents automatically
-- 📊 **Observability** — execution stats, cost tracking, health checkups
-- 🤖 **Agent Auto-Setup** — seamlessly injects managed instructions into your agent configurations
+**Z-Core 作为 KitClaw 的终极演进形态（V2）**，通过单一 CLI 补齐了 Agent 在本地开发中所缺失的全部运行时基建：
 
-### Core Design Principles
+- 👻 **Ghost Agent** — 在会话间隙自主思考的 LLM 后端（Z-Core 的灵魂）
+- 🧠 **三层记忆** — L1 身份 / L2 白板跨会话去重与提取，并集成可选的 **RAG 向量引擎** 支持 L3 知识库
+- 🔄 **会话** — 生命周期管理、暂停/恢复、跨 Agent 工作交接
+- 📋 **上下文** — Token 分析、超限自动防爆裁剪
+- 🔧 **技能体系** — **内置 17 个高质量核心 Skill**，支持依赖注入、工作流编排和三层路由
+- 🛡️ **治理** — 权限规则守门、危险 Shell 检测拦截、执行开销审计
+- 🔌 **MCP 管理** — 一处注册 MCP Server，同步到所有主流 Agent
+- 📊 **可观测性** — 可视化执行追踪、Token 成本追踪、Agent 健康报告
+- 🤖 **自动配置** — 无侵入自动注入指令到 Claude/Gemini/Codex 配置文件
 
-- **Zero external dependencies** — Python 3.11+ stdlib only
-- **No daemon** — pure CLI, stateless between invocations
-- **Agent-agnostic** — works with any terminal-native AI agent
-- **Ghost Agent** — autonomous cheap-LLM backend for compaction/extraction
+### 核心设计原则
+
+- **零外部依赖** — 仅使用 Python 3.11+ 标准库
+- **无常驻进程** — 纯 CLI 工具，调用间无状态
+- **Agent 无关** — 适配任何终端原生 AI Agent
+- **Ghost Agent** — 自主廉价 LLM 后端，负责压缩/提取
 
 ---
 
-## 📦 Installation
+## 📦 安装
 
 ```bash
 git clone <repo-url> Z-Core && cd Z-Core
 pip install -e .
 
-# Optional: enable L3 knowledge retrieval
-pip install -e ".[rag]"
-
-# Verify
+# 验证
 zcore --version
 # → zcore 0.2.0
 ```
 
-Python ≥3.11. Zero external dependencies — stdlib only.
-RAG/L3 support is optional and installed separately via `zcore[rag]`.
+Python ≥3.11，零外部依赖 — 仅使用标准库。
 
 ---
 
-## 🚀 60-Second Quick Start
+## 🚀 60 秒快速上手
 
 ```bash
-# 1. Initialize runtime
+# 1. 初始化运行时
 zcore init
 
-# 2. Auto-configure your agents (detects Claude/Gemini/Codex)
+# 2. 自动配置你的 Agent（检测 Claude/Gemini/Codex）
 zcore setup all
 
-# 3. Start a session
+# 3. 开始会话
 zcore session start --project my-app --agent claude
 # → Session started: 802718d8b3f4
 
-# 4. Work normally... then end session (auto-saves context + memories)
+# 4. 正常工作...结束后自动保存上下文和记忆
 zcore session end --session-id 802718d8b3f4 --messages messages.json
 
-# 5. Search across all past sessions
-zcore memory search --query "database decisions" --json
+# 5. 搜索所有历史会话
+zcore memory search --query "数据库选型" --json
 ```
 
-That's it. Your agents now have persistent memory.
+搞定。你的 Agent 现在有持久记忆了。
 
 ---
 
-## 🏗️ How It Works
+## 🏗️ 工作原理
 
 ```
 ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
@@ -94,7 +91,7 @@ That's it. Your agents now have persistent memory.
                         │
                ┌────────▼────────┐
                │    Z-Core CLI   │
-               │  (zero deps)   │
+               │  (零外部依赖)   │
                └────────┬────────┘
                         │
         ┌───────────────┼───────────────┐
@@ -106,316 +103,303 @@ That's it. Your agents now have persistent memory.
   └───────────┘  └─────────────┘  └──────────┘
 ```
 
-Z-Core is a **stateless CLI** — no daemon, no background process. Each invocation reads/writes files directly. Agents call it via `zcore <command> --json` and get structured JSON back.
+Z-Core 是**无状态 CLI** — 没有守护进程，没有后台服务。每次调用直接读写文件。Agent 通过 `zcore <command> --json` 调用，获取结构化 JSON 返回。
 
 ---
 
-## 👻 Ghost Agent — The Soul of Z-Core
+## 👻 Ghost Agent — Z-Core 的灵魂
 
-Z-Core's engines handle memory, sessions, and skills. But **Ghost Agent** is what makes it *autonomous*.
+Z-Core 的引擎负责记忆、会话和技能。但 **Ghost Agent** 才是让它*自主*运转的核心。
 
-Ghost Agent is a cheap LLM backend that runs **between** your sessions — it compacts long conversations, extracts decisions and facts, and triages memories by confidence. It's the reason Z-Core can maintain persistent context without you manually curating anything.
+Ghost Agent 是一个廉价 LLM 后端，在你的**会话之间**运行 — 压缩长对话、提取决策和事实、按置信度分流记忆。这就是 Z-Core 能在你不手动维护的情况下保持持久上下文的原因。
 
 ```
-  You close Claude Code
+  你关掉 Claude Code
          │
          ▼
   ┌──────────────────┐
   │  Ghost Agent     │
   │                  │
-  │  1. Read transcript
-  │  2. Extract decisions
-  │  3. Compact context
-  │  4. Deduplicate
-  │  5. Triage by confidence
+  │  1. 读取对话记录  │
+  │  2. 提取决策/事实 │
+  │  3. 压缩上下文    │
+  │  4. 去重          │
+  │  5. 置信度分流    │
   │                  │
-  │  ~$0.01/session  │
+  │  ~$0.01/次会话   │
   └────────┬─────────┘
            │
            ▼
-  You open Gemini CLI → memories already there
+  你打开 Gemini CLI → 记忆已经就位
 ```
 
-**Why it matters:**
-- Your agent sessions are **expensive** (Claude Opus, Gemini Pro). Don't waste their context window on housekeeping.
-- Ghost Agent uses a **cheap model** (Gemini Flash at $0.30/1M input tokens) to do the boring work.
-- It runs **offline** — between sessions, not during. Zero latency impact on your actual work.
+**为什么重要：**
+- 你的 Agent 会话是**昂贵的**（Claude Opus、Gemini Pro）。别把上下文窗口浪费在整理工作上。
+- Ghost Agent 用**廉价模型**（Gemini Flash，$0.30/百万输入 token）干这些脏活。
+- 它**离线运行** — 在会话之间，不在会话期间。对你实际工作零延迟影响。
 
-### Three-Level Fallback (never loses data, never blocks)
+### 三级降级（永不丢失数据，永不阻塞）
 
 ```
-Level 0: API available     → Full LLM extraction + compaction
-                              Summarizes conversations, extracts [decision]/[fact] tags,
-                              deduplicates against existing memories, scores confidence.
+Level 0: API 可用       → 完整 LLM 提取 + 压缩
+                           总结对话、提取 [decision]/[fact] 标记、
+                           与已有记忆去重、打置信度分。
 
-Level 1: API unavailable   → Heuristic extraction
-                              Regex-based scan for [decision], [action], [learning] markers.
-                              No semantic understanding, but preserves structure.
+Level 1: API 不可用     → 启发式提取
+                           正则扫描 [decision]、[action]、[learning] 标记。
+                           没有语义理解，但保留结构。
 
-Level 2: Heuristic fails   → Gzip raw transcript
-                              Stores the full conversation compressed.
-                              Picks up processing next time Ghost Agent is available.
+Level 2: 启发式也失败   → Gzip 原始对话
+                           完整对话压缩存储。
+                           下次 Ghost Agent 可用时补做处理。
 ```
 
-The principle: **never lose data, never block the user.** A degraded Ghost Agent is still better than no memory at all.
+原则：**永不丢失数据，永不阻塞用户。** 降级的 Ghost Agent 也比完全没有记忆强。
 
-### Setup
+### 配置
 
 ```bash
-# Enable Ghost Agent
+# 启用 Ghost Agent
 zcore config set llm_backend.enabled true
 
-# Set API key (environment variable recommended)
+# 设置 API Key（推荐环境变量）
 export ZCORE_LLM_API_KEY="***"
 
-# Check status
+# 检查状态
 zcore status
 # → Ghost Agent: remote (google/gemini-2.5-flash)
 ```
 
-**Cost:** ~$0.01 per session with Gemini Flash. Budget cap: `monthly_budget = 5.00` (degrades when exceeded).
+**成本：** Gemini Flash 约 $0.01/次会话。支持预算上限 `monthly_budget = 5.00`（超限降级）。
 
-**Privacy:** all prompts are sanitized before sending — API keys, file paths, and secrets are auto-redacted.
+**隐私：** 所有 prompt 发送前自动脱敏 — API Key、文件路径、密钥自动抹除。
 
-**Supported providers:** Google Gemini, Anthropic Claude, OpenAI GPT, DeepSeek, Ollama (local).
+**支持的提供商：** Google Gemini、Anthropic Claude、OpenAI GPT、DeepSeek、Ollama（本地）。
 
-→ **[Ghost Agent Deep Review](v2/design/ghost-agent-deep-review.md)** — 10-dimension architecture audit
+→ **[Ghost Agent 深度审查](v2/design/ghost-agent-deep-review.md)** — 10 维度架构评估
 
 ---
 
-## 📖 Key Commands
+## 📖 核心命令
 
 ```bash
-# Runtime
-zcore init              # First-time setup
-zcore status            # Overview
-zcore doctor            # Health check
+# 运行时
+zcore init              # 首次初始化
+zcore status            # 状态概览
+zcore doctor            # 健康检查
 
-# Sessions
-zcore session start --project <name> --agent <agent>
-zcore session end --session-id <id> --messages <file>
+# 会话
+zcore session start --project <名称> --agent <agent>
+zcore session end --session-id <id> --messages <文件>
 zcore session pause / resume / handoff
 
-# Memory & Knowledge (L2/L3)
-zcore memory search --query "keyword"
-zcore memory write "important fact" --topic <topic>
-zcore knowledge index             # requires zcore[rag]
-zcore knowledge search            # hybrid semantic retrieval
+# 记忆与知识 (L2/L3)
+zcore memory search --query "关键词"
+zcore memory write "重要事实" --topic <主题>
+zcore knowledge index             # 需要 zcore[rag]
+zcore knowledge search            # 混合语义检索
 
-# Skills & Plugins (MCP)
-zcore skill list --available      # view the 17 bundled core skills
-zcore skill install --core        # install core skills
-zcore run <skill-name>            # execute a skill
-
-# Agent setup
-zcore setup detect      # Which agents are installed?
-zcore setup all         # Configure all at once
-
-# MCP
+# 技能与插件 (Skills / MCP)
+zcore skill list --available      # 列出内置的 17 个核心功能
+zcore skill install --core        # 一键安装
+zcore run <skill-name>            # 执行技能
 zcore mcp add filesystem --command npx --args "-y,@mcp/server-filesystem,/tmp"
 zcore mcp sync --dry-run
 ```
 
-All commands support `--json` for structured output. Agents should always use it.
+所有命令支持 `--json` 输出结构化数据。Agent 应始终使用该模式。
 
-→ **[Getting Started Guide (with real output)](docs/getting-started.md)**
-→ **[RAG Setup Guide](docs/rag-setup.md)**
+→ **[完整上手指南（含真实输出）](docs/getting-started.md)**
 
 ---
 
-## 🤖 Agent Auto-Setup
+## 🤖 Agent 自动配置
 
-`zcore setup` injects a managed instruction block into agent configs (`~/.claude/CLAUDE.md`, etc.) so they automatically learn to use Z-Core:
+`zcore setup` 自动向 Agent 配置文件注入托管指令块，让 Agent 自动学会使用 Z-Core：
 
 ```bash
 zcore setup detect --json     # → claude: true, gemini: true, codex: false
-zcore setup claude            # Configure one agent
-zcore setup all               # Configure all detected
-zcore setup claude --dry-run  # Preview without writing
+zcore setup claude            # 配置单个 Agent
+zcore setup all               # 配置所有检测到的
+zcore setup claude --dry-run  # 预览不修改
 ```
 
-**Safe by design:** idempotent, auto-backup (`.bak`), non-destructive (only touches managed block).
+**安全保障：** 幂等注入、自动备份（`.bak`）、不破坏原有内容。
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ 配置
 
-`~/.zcore/config.toml`:
+`~/.zcore/config.toml`：
 
 ```toml
 [llm_backend]
-enabled = false                   # Enable Ghost Agent
+enabled = false                   # 启用 Ghost Agent
 provider = "google"               # google | anthropic | openai | deepseek | ollama
-model = "gemini-2.5-flash"        # Recommended: cheap + fast
-monthly_budget = 5.00             # USD monthly cap
-fallback_on_failure = true        # Degrade to heuristic on API failure
+model = "gemini-2.5-flash"        # 推荐：廉价快速模型
+monthly_budget = 5.00             # 月度预算上限（美元）
+fallback_on_failure = true        # API 失败时降级为启发式模式
 
 [privacy]
-redact_before_send = true         # Auto-redact secrets before LLM calls
+redact_before_send = true         # 发送前自动脱敏
 
 [memory]
-auto_extract = false              # Auto-extract on session end
+auto_extract = true               # 会话结束时自动提取记忆
 
 [context]
-auto_compact = false              # Auto-compact when context overflows
+auto_compact = true               # 上下文超限时自动压缩
 
 [governance]
 permission_mode = "ask"           # ask | allow | deny
 ```
 
-API keys via environment variables: `export ZCORE_LLM_API_KEY="***"`
+API Key 通过环境变量设置：`export ZCORE_LLM_API_KEY="***"`
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ 架构
 
-Z-Core is **10 independent engines**, all injected via `RuntimePaths`:
+Z-Core 由 **10 个独立引擎** 构成，全部通过 `RuntimePaths` 依赖注入：
 
-| Engine | Responsibility |
-|--------|----------------|
-| **GhostAgent** 👻 | generate / availability / 3-level fallback (THE BRAIN) |
-| ContextEngine | analyze / compact / pre-trim |
-| MemoryEngine | extract / write / search / dedup / expire |
-| SessionManager | start / end / pause / resume / handoff / cleanup |
-| SkillRouter | discover / match / execute / install / validate |
-| PermissionEngine | check / add_rule / audit_report |
-| ObservabilityEngine | log_execution / log_cost / stats / health |
-| AgentSetupEngine | detect / setup / inject |
-| McpEngine | register / diff / sync across agents |
-| WorkflowEngine | discover / validate / run |
+| 引擎 | 职责 |
+|------|------|
+| **GhostAgent** 👻 | 生成 / 可用性检查 / 三级降级（大脑） |
+| ContextEngine | 分析 / 压缩 / 预裁剪 |
+| MemoryEngine | 提取 / 写入 / 搜索 / 去重 / 过期 |
+| SessionManager | 开始 / 结束 / 暂停 / 恢复 / 交接 / 清理 |
+| SkillRouter | 发现 / 匹配 / 执行 / 安装 / 验证 |
+| PermissionEngine | 检查 / 添加规则 / 审计报告 |
+| ObservabilityEngine | 记录执行 / 记录成本 / 统计 / 健康检查 |
+| AgentSetupEngine | 检测 / 配置 / 注入 |
+| McpEngine | 注册 / 对比 / 同步到各 Agent |
+| WorkflowEngine | 发现 / 校验 / 执行 |
 
 ---
 
-## 📁 Runtime Layout
+## 📁 运行时目录
 
 ```
-~/.zcore/                         # Runtime directory (created by `zcore init`)
-├── config.toml                   #   Configuration (permissions 0600)
-├── shared-rules.yaml             #   Shared behavioral rules
-├── mcp-servers.toml              #   MCP server registry
-├── sessions/                     #   Session data
-│   ├── index.json                #     Session index
-│   └── <id>/                     #     Per-session
-│       ├── context.json.gz       #       Context snapshot
-│       ├── context.md            #       Human-readable summary
-│       └── memories.json         #       Extracted memories
-├── logs/                         #   Execution & cost logs
-├── hooks/                        #   Pre/post-execute hooks
-└── workflows/                    #   Workflow definitions
+~/.zcore/                         # 运行时主目录（zcore init 创建）
+├── config.toml                   #   配置文件（权限 0600）
+├── shared-rules.yaml             #   共享行为规则
+├── mcp-servers.toml              #   MCP Server 注册表
+├── sessions/                     #   会话数据
+│   ├── index.json                #     会话索引
+│   └── <id>/                     #     单次会话
+│       ├── context.json.gz       #       上下文快照
+│       ├── context.md            #       人可读摘要
+│       └── memories.json         #       提取的记忆
+├── logs/                         #   执行与成本日志
+├── hooks/                        #   前/后置执行 Hook
+└── workflows/                    #   工作流定义
 
-~/.ai-memory/                     # Memory storage
-├── topics/                       #   Topic-based entries
-└── whiteboard.json               #   Cross-session decisions/actions
+~/.ai-memory/                     # 记忆存储
+├── topics/                       #   按主题存储的条目
+└── whiteboard.json               #   跨会话决策/行动
 
-~/.ai-skills/                     # Skill installation directory
+~/.ai-skills/                     # 技能安装目录
 └── <skill-name>/
-    ├── SKILL.md                  #   Skill manifest
-    └── scripts/                  #   Executable scripts
+    ├── SKILL.md                  #   技能清单
+    └── scripts/                  #   可执行脚本
 ```
 
 ---
 
-## 📁 Project Structure
+## 📁 项目结构
 
 ```
 Z-Core/
-├── zcore/                  # Python package
-│   ├── cli/main.py         #   argparse CLI (40 commands)
-│   ├── engines/            #   10 engines
-│   ├── models/             #   Data models
-│   ├── hooks/              #   Lifecycle hook framework
-│   ├── utils/              #   Token estimation, FileLock, privacy redaction
-│   ├── prompts/            #   LLM prompt templates
-│   ├── config.py           #   TOML config management
-│   └── runtime.py          #   RuntimePaths discovery
-├── tests/                  # 50 unit tests
-├── docs/                   # Guides and release notes
-├── v2/design/              # Architecture & engine specifications
-├── pyproject.toml          # Package config
+├── zcore/                  # Python 包
+│   ├── cli/main.py         #   argparse CLI（40 个命令）
+│   ├── engines/            #   10 个引擎
+│   ├── models/             #   数据模型
+│   ├── hooks/              #   生命周期 Hook 框架
+│   ├── utils/              #   Token 估算、FileLock、脱敏
+│   ├── prompts/            #   LLM Prompt 模板
+│   ├── config.py           #   TOML 配置管理
+│   └── runtime.py          #   RuntimePaths 发现
+├── tests/                  # 50 个单元测试
+├── docs/                   # 教程与发布说明
+├── v2/                     # 设计文档、RFC、项目管理
+├── pyproject.toml          # 包配置
 └── LICENSE                 # MIT
 ```
 
 ---
 
-## 🧪 Testing
+## 🧪 测试
 
 ```bash
-python -m unittest discover tests -v    # Full suite
-python -m unittest discover tests -q    # Quick check
+python -m unittest discover tests -v    # 完整测试
+python -m unittest discover tests -q    # 快速验证
 ```
 
 ---
 
-## 📚 Documentation
+## 📚 设计文档
 
-| Document | Content |
-|----------|---------|
-| **[Getting Started](docs/getting-started.md)** | 10-minute walkthrough with real output |
-| [Architecture](v2/design/architecture.md) | Engine design, dependency graph, config schema |
-| [Memory Engine](v2/design/memory-engine.md) | Extraction, dedup, topic storage |
-| [Session Manager](v2/design/session-manager.md) | Lifecycle, handoff, pause/resume |
-| [Skill Router](v2/design/skill-router.md) | Three-layer routing and orchestration |
-| [Governance](v2/design/governance.md) | Permission rules and hooks |
-| [Context Engine](v2/design/context-engine.md) | Token analysis and compaction |
-| [CLI Design](v2/design/cli.md) | Command interface specification |
-| [Ghost Agent Deep Review](v2/design/ghost-agent-deep-review.md) | 10-dimension architecture audit |
-| [Release Notes 0.2.0](docs/release-0.2.0.md) | Standalone extraction baseline |
-
----
-
-## 📦 Relationship with KitClaw
-
-Z-Core is the **enhanced evolution** of the [KitClaw](https://github.com/cloud99277/KitClaw) multi-agent infrastructure — fully covering all of KitClaw's capabilities and extending them with new engines for Ghost Agent, MCP management, and workflow orchestration. Independent repo, independent release, usable standalone.
+| 文档 | 内容 |
+|------|------|
+| **[新手上手指南](docs/getting-started.md)** | 10 分钟完整引导，含真实命令输出 |
+| [整体架构](v2/design/architecture.md) | 引擎设计、依赖图、配置 schema |
+| [记忆引擎](v2/design/memory-engine.md) | 提取、去重、主题存储 |
+| [会话管理](v2/design/session-manager.md) | 生命周期、交接、暂停/恢复 |
+| [技能路由](v2/design/skill-router.md) | 三层路由与编排 |
+| [治理引擎](v2/design/governance.md) | 权限规则与 Hook 框架 |
+| [上下文引擎](v2/design/context-engine.md) | Token 分析与压缩 |
+| [CLI 设计](v2/design/cli.md) | 命令接口规格 |
+| [Ghost Agent 深度审查](v2/design/ghost-agent-deep-review.md) | 10 维度架构评估 |
+| [0.2.0 发布说明](docs/release-0.2.0.md) | 独立抽离基线 |
 
 ---
 
-## 🙏 Contributing
+## 🙏 参与贡献
 
-Issues and PRs welcome. Key principles:
+欢迎 Issue 和 PR。核心原则：
 
-- Zero external dependencies (stdlib only)
-- All engines must be injectable via `RuntimePaths`
-- CLI output must support `--json` for every command
-- Test coverage for new engines/features
+- 零外部依赖（仅标准库）
+- 所有引擎必须通过 `RuntimePaths` 注入
+- 所有命令必须支持 `--json` 输出
+- 新功能需要测试覆盖
 
 ```bash
-# Dev setup
+# 开发环境
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-# Before submitting
+# 提交前
 python -m compileall zcore tests
 python -m unittest discover tests -v
 ```
 
 ---
 
-## 📦 Relationship with KitClaw
+## 📦 与 KitClaw 的关系
 
-**Z-Core is the direct successor and complete replacement for [KitClaw](https://github.com/cloud99277/KitClaw).** First-generation KitClaw has been officially deprecated and archived.
-Z-Core absorbs 100% of the previous baseline (including memory, core skills, and RAG capabilities) into a single, cohesive engine, while adding modern features like the Ghost Agent, a unified CLI namespace, global MCP management, and workflow routing.
-A single `pip install zcore` is now everything you need. You no longer need to clone standalone bash repositories.
-
----
-
-## 🌐 Ecosystem Architecture & Boundaries (FAQ)
-
-As your AI toolchain grows, you might have the following architectural questions:
-
-**Q1: I mostly use GUI-based Agents with innate memory (e.g., Antigravity Desktop, Cursor). Do I still need Z-Core?**  
-**Absolutely.** Z-Core acts as your **"Standardized Orchestrator & Heavy Database"** (SOP backend). Even though graphical LLMs are smart, they are prone to hallucinations and skipped steps when executing extremely long build tasks or refactoring dozens of files. Because Z-Core provides robust, validated components, your GUI agent can dispatch commands piece by piece to the `Z-Core Skill Library` in the background without losing logical tracking. Furthermore, when your desktop AI needs to search for needles in a haystack across your project, it still relies on `zcore knowledge` as a frictionless, zero-dependency RAG engine middleware.
-
-**Q2: Do I have to manually type `zcore session start/end` every time I begin working to log my state?**  
-**No.** The hallmark of Z-Core is its "invisible orchestration." Once you run `zcore setup all`, Z-Core deeply hooks into your Claude / Gemini / Codex configuration systems. When you give natural language instructions to your AI, they will **automatically spin up sandboxes and extract context in the background**, seamlessly discarding overhead and archiving memory when done. The explicit CLI commands documented here are merely APIs exposed for developers to intervene or perform "emergency surgery" during edge cases.
-
-**Q3: My stack includes OpenClaw (gateway bridging engine) or Hermes (message bus daemon). Why not integrate them into Z-Core to create a massive all-in-one suite?**  
-**Strict separation of concerns.**
-Z-Core's ultimate moat is its "zero-dependency, pure CLI nature, zero daemon, and zero memory footprint." This allows it to act as an elite operative dropping into primitive sandboxes or isolated offline servers instantly.
-Conversely, tools like OpenClaw must handle long-lived WebSockets, high-concurrency channel responses, and massive 3rd-party network packages. Coupling them would destroy Z-Core's razor-sharp design. The superior architectural pattern is to run them as top-layer network routers; when they require complex local file searches or LLM code extractions, they simply fire a `--json` subprocess task to `Z-Core` to fetch the answer.
+Z-Core 是 [KitClaw](https://github.com/cloud99277/KitClaw) 的**全面升级与最终继承者**。原 KitClaw 仓库现已正式归档（Archived）。
+Z-Core 在完全保留并内置了前代所有核心 Skill 和知识库（RAG）能力的基础之上，引入了 Ghost Agent 机制、统一的命令空间、全局 MCP 注册表以及高级工作流路由引擎。
+只需安装 Z-Core（`pip install zcore`），即可获得所有能力，不再需要任何外部仓库。
 
 ---
 
-## 📄 License
+## 🌐 生态架构与界限 (FAQ)
+
+随着你的工具栈不断演进，你可能会有以下架构疑问：
+
+**Q1：我平时主要用自带原生记忆的图形化 Agent（如 Antigravity 桌面端等），还需要 Z-Core 吗？**
+**绝对需要。** Z-Core 在这里充当的是你的**“标准化工兵与重型数据库”**（SOP底座）。图形化大模型虽然聪明，但执行超长构建任务或修改数十个文件时容易“产生幻觉”漏步骤。由于 Z-Core 提供强制的标准组件校验，你的桌面端 AI 能够在后台按部就班分片下发调用命令给 `Z-Core Skill 库` 进行执行而不至于逻辑崩盘。同时，桌面端 AI 需要极速在项目中“大海捞针”时，依然需要借调 `zcore knowledge` 提供的本地 0 依赖 RAG 搜索引擎作为基础中间件。
+
+**Q2：开始每次开发工作时，我都得手敲 `zcore session start/end` 来记考勤吗？**
+**不需要。** Z-Core 特色正是“极度无感”。只要你执行过一次 `zcore setup all`，Z-Core 便已深度嵌入了你的 Claude / Gemini / Codex 配置系统。当你向 AI 们下达自然语言时，它们都会**在后台自动起挂沙箱、提取上下文**，用完即焚并归档。写在文档里的 CLI 指令，是暴露给开发者在智障卡壳或断电时能进控制台做“紧急手术”的 API 接口集。
+
+**Q3：我的开发群组里还有 OpenClaw（通用网关对接引擎）或 Hermes（消息节点总线），为什么不把它们一并收编进 Z-Core 变成大全家桶？**
+**为了严格的微服务架构隔离隔离 (Separation of Concerns)。**
+Z-Core 的军舰级护城河是“零依赖、纯 CLI 工具、用完就关、绝对不常驻内存”。这让它在极简系统沙盒、甚至离线服务器里都能当特长兵使用；
+但类似 OpenClaw 等工具由于要接入长网页 socket 和处理高并发消息渠道响应，必然伴随着海量的第三方网络及进程负担乃至服务器权限诉求。一旦整合，Z-Core 的极锐系统设计便会被摧毁。优秀的架构解法是：让它们作为上层网络分发器运行，如果遇到复杂的本机文件检索处理与大模型代码提取事务，甩一条 `--json` JSON 任务给 `Z-Core` 子进程负责求解。
+
+---
+
+## 📄 许可证
 
 [MIT](LICENSE)
 
