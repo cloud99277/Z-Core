@@ -15,6 +15,28 @@ def test_memory_entry_roundtrip_and_markdown():
     assert restored.to_markdown_line().startswith("- [fact] Python >=3.11")
 
 
+def test_memory_entry_markdown_roundtrip_preserves_structured_fields():
+    entry = MemoryEntry(
+        type="decision",
+        content="Keep source metadata",
+        topic="zcore",
+        source="codex",
+        source_session="session-1",
+        project="Z-Core",
+        id="memory-1",
+        updated_at="2026-04-25T00:00:00+00:00",
+    )
+
+    parsed = MemoryEntry.from_markdown_line(entry.to_markdown_line(), topic="fallback")
+
+    assert parsed is not None
+    assert parsed.id == "memory-1"
+    assert parsed.topic == "zcore"
+    assert parsed.project == "Z-Core"
+    assert parsed.source_session == "session-1"
+    assert parsed.updated_at == "2026-04-25T00:00:00+00:00"
+
+
 def test_topic_store_write_read_roundtrip(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()

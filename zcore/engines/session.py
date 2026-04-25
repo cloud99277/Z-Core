@@ -56,6 +56,8 @@ class SessionManager:
             raise FileNotFoundError(f"Session not found: {session_id}")
 
         meta = SessionMeta(**json.loads(meta_path.read_text(encoding="utf-8")))
+        if meta.status != "active":
+            raise ValueError(f"Session {session_id} must be active, found {meta.status}")
         meta.status = "completed"
         meta.ended_at = datetime.now(UTC).isoformat()
 

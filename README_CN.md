@@ -244,10 +244,10 @@ fallback_on_failure = true        # API 失败时降级为启发式模式
 redact_before_send = true         # 发送前自动脱敏
 
 [memory]
-auto_extract = false              # 会话结束时自动提取记忆
+auto_extract = true               # 会话结束时自动提取记忆
 
 [context]
-auto_compact = false              # 上下文超限时自动压缩
+auto_compact = true               # 上下文超限时自动压缩
 
 [governance]
 permission_mode = "ask"           # ask | allow | deny

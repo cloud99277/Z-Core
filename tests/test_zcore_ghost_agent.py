@@ -72,6 +72,8 @@ def test_ghost_agent_falls_back_when_api_key_missing(tmp_path, monkeypatch):
 
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("ZCORE_HOME", str(home / ".zcore"))
+    monkeypatch.delenv("KITCLAW_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("ZCORE_LLM_API_KEY", raising=False)
 
     paths = RuntimePaths.discover()
     paths.ensure_runtime_dirs()

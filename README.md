@@ -254,10 +254,10 @@ fallback_on_failure = true        # Degrade to heuristic on API failure
 redact_before_send = true         # Auto-redact secrets before LLM calls
 
 [memory]
-auto_extract = false              # Auto-extract on session end
+auto_extract = true               # Auto-extract on session end
 
 [context]
-auto_compact = false              # Auto-compact when context overflows
+auto_compact = true               # Auto-compact when context overflows
 
 [governance]
 permission_mode = "ask"           # ask | allow | deny

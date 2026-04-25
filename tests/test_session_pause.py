@@ -48,3 +48,17 @@ class SessionPauseTests(unittest.TestCase):
             self.assertEqual(end.returncode, 0, end.stderr)
             payload = json.loads(end.stdout)
             self.assertEqual(payload["status"], "completed")
+
+    def test_paused_session_cannot_end_directly(self) -> None:
+        with TestHome() as ctx:
+            run_zcore("init", "--json", home=ctx.home)
+            start = run_zcore("session", "start", "--project", "kitclaw", "--agent", "codex", "--json", home=ctx.home)
+            session_id = json.loads(start.stdout)["session_id"]
+            run_zcore("session", "pause", "--session-id", session_id, "--json", home=ctx.home)
+
+            proc = run_zcore("session", "end", "--session-id", session_id, "--json", home=ctx.home)
+
+            self.assertEqual(proc.returncode, 1)
+            payload = json.loads(proc.stdout)
+            self.assertFalse(payload["ok"])
+            self.assertIn("must be active", payload["error"])

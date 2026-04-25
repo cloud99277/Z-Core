@@ -49,6 +49,7 @@ class AgentSetupTests(unittest.TestCase):
             self.assertIn("inserted managed Z-Core block", first.changes)
             self.assertIsNotNone(first.backup_path)
             self.assertTrue(target.read_text(encoding="utf-8").count(ZCORE_START) == 1)
+            self.assertIn("--messages <messages.json>", target.read_text(encoding="utf-8"))
             self.assertEqual(second.changes, ["no changes needed"])
 
     def test_setup_detect_and_dry_run_cli(self) -> None:

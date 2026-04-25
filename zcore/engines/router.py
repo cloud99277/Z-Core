@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import fnmatch
+from importlib import resources
 import re
 import shutil
 import subprocess
@@ -18,7 +19,13 @@ from zcore.runtime import RuntimePaths
 
 def _bundled_skills_dir() -> Path:
     """Return the path to skills/core/ bundled with the Z-Core repo."""
-    return repo_root() / "skills" / "core"
+    repo_candidate = repo_root() / "skills" / "core"
+    if repo_candidate.exists():
+        return repo_candidate
+    try:
+        return Path(str(resources.files("skills.core")))
+    except ModuleNotFoundError:
+        return repo_candidate
 
 
 @dataclass

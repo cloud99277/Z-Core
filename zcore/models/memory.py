@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import json
 import re
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -15,6 +17,7 @@ _MARKDOWN_RE = re.compile(
     r"(?P<content>.+?) "
     r"\(source: (?P<source>.*?), confidence: (?P<confidence>\d+(?:\.\d+)?), date: (?P<date>\d{4}-\d{2}-\d{2})\)$"
 )
+_STRUCTURED_RE = re.compile(r"\s+<!-- zcore:(?P<payload>[A-Za-z0-9_\-=]+) -->$")
 
 
 def now_iso() -> str:
@@ -61,11 +64,30 @@ class MemoryEntry:
         date_value = self.created_at[:10]
         content = " ".join(self.content.split())
         source = " ".join(self.source.split()) or "unknown"
-        return f"- [{self.type}] {content} (source: {source}, confidence: {self.confidence:.2f}, date: {date_value})"
+        payload = json.dumps(self.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        encoded = base64.urlsafe_b64encode(payload.encode("utf-8")).decode("ascii")
+        return (
+            f"- [{self.type}] {content} "
+            f"(source: {source}, confidence: {self.confidence:.2f}, date: {date_value}) "
+            f"<!-- zcore:{encoded} -->"
+        )
 
     @classmethod
     def from_markdown_line(cls, line: str, *, topic: str) -> "MemoryEntry | None":
-        match = _MARKDOWN_RE.match(line.strip())
+        stripped = line.strip()
+        structured_match = _STRUCTURED_RE.search(stripped)
+        if structured_match:
+            encoded = structured_match.group("payload")
+            try:
+                payload = json.loads(base64.urlsafe_b64decode(encoded.encode("ascii")).decode("utf-8"))
+            except (ValueError, json.JSONDecodeError):
+                payload = None
+            if isinstance(payload, dict):
+                payload.setdefault("topic", topic)
+                return cls.from_dict(payload)
+            stripped = _STRUCTURED_RE.sub("", stripped)
+
+        match = _MARKDOWN_RE.match(stripped)
         if not match:
             return None
         created_at = f"{match.group('date')}T00:00:00+00:00"

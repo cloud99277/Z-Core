@@ -37,10 +37,14 @@ rag = [
 ]
 
 [tool.setuptools]
-include-package-data = false
+include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["zcore*"]
+include = ["zcore*", "skills*"]
 
 [tool.setuptools.package-data]
 "zcore.prompts" = ["*.md"]
+"skills.core" = ["**/*"]
+
+[tool.setuptools.exclude-package-data]
+"skills.core" = ["**/.claude/*", "**/__pycache__/*", "**/*.pyc", "**/*.pyo"]

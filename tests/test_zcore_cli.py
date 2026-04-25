@@ -323,7 +323,7 @@ def test_memory_extract_list_search_pending_and_migrate_cli(tmp_path):
     search = run_zcore("memory", "search", "--query", "Python", "--json", home=home)
     assert search.returncode == 0, search.stderr
     search_payload = json.loads(search.stdout)
-    assert search_payload == [] or "Python" in search_payload[0]["content"]
+    assert search_payload["l2"] == [] or "Python" in search_payload["l2"][0]["content"]
 
     whiteboard_path = home / ".ai-memory" / "whiteboard.json"
     whiteboard_path.write_text(
@@ -334,3 +334,55 @@ def test_memory_extract_list_search_pending_and_migrate_cli(tmp_path):
     assert dry_run.returncode == 0, dry_run.stderr
     dry_payload = json.loads(dry_run.stdout)
     assert dry_payload["dry_run"] is True
+
+
+def test_session_end_honors_auto_extract_and_compact_config(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    init_proc = run_zcore("init", "--json", home=home)
+    assert init_proc.returncode == 0, init_proc.stderr
+
+    config_path = home / ".zcore" / "config.toml"
+    config_text = config_path.read_text(encoding="utf-8")
+    config_text = config_text.replace("auto_extract = true", "auto_extract = false")
+    config_text = config_text.replace("auto_compact = true", "auto_compact = false")
+    config_path.write_text(config_text, encoding="utf-8")
+
+    start = run_zcore("session", "start", "--project", "kitclaw", "--agent", "codex", "--json", home=home)
+    session_id = json.loads(start.stdout)["session_id"]
+    messages_path = tmp_path / "messages.json"
+    messages_path.write_text(
+        json.dumps([{"role": "user", "content": "[decision] Config disables automation."}]),
+        encoding="utf-8",
+    )
+
+    end = run_zcore(
+        "session",
+        "end",
+        "--session-id",
+        session_id,
+        "--messages",
+        str(messages_path),
+        "--json",
+        home=home,
+    )
+    assert end.returncode == 0, end.stderr
+    session_dir = home / ".zcore" / "sessions" / session_id
+    assert (session_dir / "context.json.gz").exists()
+    assert not (session_dir / "context.md").exists()
+    assert not (session_dir / "memories.json").exists()
+
+
+def test_json_errors_do_not_emit_tracebacks(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    init_proc = run_zcore("init", "--json", home=home)
+    assert init_proc.returncode == 0, init_proc.stderr
+
+    proc = run_zcore("session", "show", "missing-session", "--json", home=home)
+
+    assert proc.returncode == 1
+    assert "Traceback" not in proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["ok"] is False
+    assert "Session not found" in payload["error"]

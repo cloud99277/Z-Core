@@ -105,7 +105,7 @@ class AgentSetupEngine:
                 "## Z-Core Runtime Integration",
                 "",
                 "- 开始新任务时：`zcore session start --project <project> --agent <agent> --json`",
-                "- 完成任务后：`zcore session end --session-id <id> --json`",
+                "- 完成任务后：保存当前对话为 messages JSON，然后运行 `zcore session end --session-id <id> --messages <messages.json> --json`",
                 '- 搜索记忆：`zcore memory search --query "<query>" --json`',
                 "- 上下文分析：`zcore context analyze --model <model> --input <file> --json`",
                 "- 执行 skill：`zcore run <skill-name> [--args] --json`",
