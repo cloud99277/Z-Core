@@ -71,3 +71,4 @@ status_source: single-source-of-truth
 - Embedding 语义去重
 
 > 详细规划见 `v2/pm/ideas/V3-Roadmap.md`
+> **V3.0 MVP 范围定义**见 `v2/pm/ideas/V3-MVP-Scope.md`（2026-04-27 PM 审查后产出）

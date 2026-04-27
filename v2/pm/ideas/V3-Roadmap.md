@@ -58,6 +58,19 @@ scope: v3-planning
 
 ---
 
+## 🔄 The Harvester — 自动化记忆收割（重大特性）
+
+**定位**：解决 Agent “默写” JSON 导致的记录残缺（一问一答）问题，实现全量对话接入。
+
+**核心构思**：
+- **主动接入 (Active Ingestion)**: 废弃“求 Agent 导出 JSON”的模式，改为由 Z-Core 自动解析本地 Agent 日志（如 `.claude/sessions/`、`.hermes/sessions/`、Cursor 缓存）。
+- **收割器指令**: `zcore session ingest --source <claude|hermes|cursor>`。
+- **中间件角色**: Z-Core 不重复存储原始大文本，而是将其加工为结构化 Markdown 报告后，同步给其他执行 Agent。
+
+**优先级**：极高 — 这是保证 V3 Planner 和 Evaluator 拥有高质量数据输入的前提。
+
+---
+
 ## 📊 Evaluator Engine — 独立验收
 
 **定位**：独立于执行者的质量评估引擎，不靠 Agent 自评。
@@ -84,6 +97,9 @@ scope: v3-planning
 
 | 特性 | 说明 | 优先级 |
 |------|------|--------|
+| **预测性记忆推送** | 收割机接入数据后，主动向执行 Agent 注入相关的历史决策和 Bug 预警 | 高 |
+| **分歧审计器** | 跨 Agent 协作时，自动对比并发现不同 Agent 对架构决策的理解偏差 | 中 |
+| **会话钱包 (Context Wallet)** | 将 Session、记忆、快照封装为 `.zcore` 文件，支持心智模型的冷冻与分享 | 中 |
 | GhostAgent 按角色切换模型 | 压缩用 Flash，提取用 Haiku，分析用 Sonnet | 中 |
 | Context Reset 机制 | 主动重置并恢复上下文，而非被动等待窗口爆满 | 中 |
 | Persona Engine (RFC-003) | 统一人格同步到各 Agent（行为模式、偏好、语调） | 低 |
@@ -94,3 +110,7 @@ scope: v3-planning
 ---
 
 *本文档为构思阶段，优先级和范围待进一步讨论。*
+
+> **[2026-04-27 更新]** V3.0 MVP 范围已定义，详见 `V3-MVP-Scope.md`。
+> 本文档继续作为 V3 全量特性池保留，MVP 之外的特性按 V3.1/V3.2/V3.5+ 分批交付。
+

@@ -486,6 +486,16 @@ def _emit_error(message: str, *, json_output: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        return _main_impl(argv)
+    except Exception as exc:
+        if "--json" in (argv or sys.argv):
+            _emit_error(str(exc), json_output=True)
+            return 1
+        raise
+
+
+def _main_impl(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     raw_argv = argv if argv is not None else sys.argv[1:]
     args, unknown = parser.parse_known_args(_normalize_argv(raw_argv))

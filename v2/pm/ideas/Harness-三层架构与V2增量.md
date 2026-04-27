@@ -280,13 +280,22 @@ V3（主控大脑）= 对用户负责 🔮 规划中
 
 | Harness 层 | 对应模块 | V2 现状 | V3 目标 |
 |-----------|---------|---------|---------|
-| 知识层 | Context + Memory + L3 | 已有，但 AGENTS.md 太重 | AGENTS.md 轻量化为导航地图；知识健康检查（scheduler-based） |
+| 知识层 | Ingest + Context + Memory | 被动式：Agent 手写 JSON，记录残缺（一问一答） | **The Harvester (主动收割)**：自动接入 Claude/Hermes 日志，确保数据完整性 |
 | 约束与流程层 | Planner + Router + Hooks | Hooks 已有，缺 Planner | Planner Engine（需求展开 + 验收契约）；复杂度检测自动触发 |
 | 反馈与运行时层 | Evaluator + Observability | Observability 已有，缺 Evaluator | Evaluator Engine（独立验收，不靠 Agent 自评）；context reset 机制 |
 
 ### V3 模块设计草案
 
-#### 8.1 Planner Engine（`engines/planner.py`）
+#### 8.1 Ingest Engine (The Harvester)
+
+**职责**：跨 Agent 原始日志收割，消除 Agent 的导出负担
+
+**功能**：
+- **Source Adapters**: 适配不同 Agent 的私有存储格式。
+- **Auto-Sync**: 检测到 Agent 会话结束时自动触发收割。
+- **Integrity Check**: 确保收割的历史记录包含完整的交互流，而非仅单轮对话。
+
+#### 8.2 Planner Engine（`engines/planner.py`）
 
 **职责**：接收用户模糊需求，输出结构化执行计划 + 验收契约
 
