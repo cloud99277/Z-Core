@@ -37,7 +37,9 @@ status_source: single-source-of-truth
 - [x] V3 构思全景梳理与 PM 审查（2026-04-27）
 - [x] V3 MVP 范围定义（V3-MVP-Scope.md）
 - [x] PM 管理体系初始化
-- [x] 项目仓库创建与文档迁移
+- [x] 仓库收拢：废弃独立仓库，回归 `v3/develop` 分支（v2.0.0 Tag 已打）
+- [x] PM Skill 增强：Impact 字段 + Gate Criteria + 回归验证
+- [x] V3 PM 文件按新规范对齐
 
 ## 阻塞点
 
@@ -49,10 +51,11 @@ status_source: single-source-of-truth
 
 ## 最新决策
 
-- [2026-04-27] V3 项目从 V2 仓库独立，创建 Z-Core-V3 专用仓库
+- [2026-04-27] 仓库收拢：废弃独立 Z-Core-V3 仓库，V3 在 `v3/develop` 分支开发
 - [2026-04-27] V3.0 MVP = Harvester + GhostAgent 角色切换 + 脱敏 + Session 搜索
 - [2026-04-27] 具身伴侣（RFC-005）降级为 V3.5+ / 独立产品线
 - [2026-04-27] Dashboard 优先做 TUI（V3.1），Web 版本 V3.2+
+- [2026-04-27] PM Skill 增强：Decision-Log 强制兼容性评估 + 里程碑准出门禁
 
 ## 明确延期
 
@@ -64,4 +67,5 @@ status_source: single-source-of-truth
 - 商业化付费功能 → V3.2+
 - Creator Economy → V4+
 
-> 详细规划见 `pm/ideas/V3-MVP-Scope.md` 和 `pm/ideas/V3-Roadmap.md`
+> 详细规划见 `v2/pm/ideas/V3-MVP-Scope.md` 和 `v2/pm/ideas/V3-Roadmap.md`
+> V3 PM 文件见 `v3/pm/`，V2 PM 文件保留在 `v2/pm/`

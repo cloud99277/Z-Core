@@ -9,12 +9,12 @@ goal: 落地 Harvester 收割机 + GhostAgent 角色切换，让 Z-Core 拥有�
 
 ## 里程碑
 
-| 里程碑 | 目标 | 预计工作量 | 依赖 | 状态 |
-|--------|------|-----------|------|:----:|
-| **M1** | Harvester 收割机原型（Claude + Hermes adapter） | 5-7 天 | 需分析 Claude/Hermes 日志格式 | ⚪ 待启动 |
-| **M2** | GhostAgent 角色切换 | 1-2 天 | config.toml 已预留 | ⚪ 待启动 |
-| **M3** | 隐私脱敏管线增强 | 2-3 天 | 复用现有 privacy.py | ⚪ 待启动 |
-| **M4** | Session 全文搜索 | 2-3 天 | 依赖 M1 产出 | ⚪ 待启动 |
+| 里程碑 | 目标 | 准出标准 | 预计工作量 | 依赖 | 状态 |
+|--------|------|---------|-----------|------|:----:|
+| **M1** | Harvester 收割机原型（Claude + Hermes adapter） | Claude adapter 解析成功率 ≥ 90%；Hermes adapter 通过 SQLite 读取测试；≥ 5 个测试用例通过 | 5-7 天 | 需分析 Claude/Hermes 日志格式 | ⚪ 待启动 |
+| **M2** | GhostAgent 角色切换 | `generate(role="compact")` 正确路由到 Flash；fallback 降级正常；≥ 3 个测试用例通过 | 1-2 天 | config.toml 已预留 | ⚪ 待启动 |
+| **M3** | 隐私脱敏管线增强 | API key/password/IP/email/token 模式 100% 脱敏；ingest-ignore 规则生效；≥ 3 个测试用例通过 | 2-3 天 | 复用现有 privacy.py | ⚪ 待启动 |
+| **M4** | Session 全文搜索 | 1000 条会话搜索 < 2s；多关键词 AND 搜索正确；≥ 4 个测试用例通过 | 2-3 天 | 依赖 M1 产出 | ⚪ 待启动 |
 
 ## M1 任务拆解：Harvester 收割机
 
