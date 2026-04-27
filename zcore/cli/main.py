@@ -19,6 +19,7 @@ from zcore.engines.agent_setup import AgentSetupEngine
 from zcore.engines.context import ContextEngine
 from zcore.engines.ghost_agent import GhostAgent
 from zcore.engines.governance import PermissionDeniedError, PermissionEngine, resolve_ask_behavior
+from zcore.engines.harvester import HarvesterEngine
 from zcore.engines.mcp import McpEngine
 from zcore.engines.memory import MemoryEngine
 from zcore.engines.observability import ObservabilityEngine
@@ -295,6 +296,29 @@ def _build_parser() -> argparse.ArgumentParser:
 
     observe_health = observe_subparsers.add_parser("health", help="Run observability health checks")
     observe_health.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    ghost_parser = subparsers.add_parser("ghost", help="Ghost Agent commands")
+    ghost_subparsers = ghost_parser.add_subparsers(dest="ghost_command", required=True)
+
+    ghost_roles = ghost_subparsers.add_parser("roles", help="List Ghost Agent role model routing")
+    ghost_roles.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    harvest_parser = subparsers.add_parser("harvest", help="Harvest external conversation sources")
+    harvest_subparsers = harvest_parser.add_subparsers(dest="harvest_command", required=True)
+
+    harvest_discover = harvest_subparsers.add_parser("discover", help="Discover harvestable sessions")
+    harvest_discover.add_argument("--source")
+    harvest_discover.add_argument("--project")
+    harvest_discover.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    harvest_ingest = harvest_subparsers.add_parser("ingest", help="Ingest discovered sessions")
+    harvest_ingest.add_argument("--source")
+    harvest_ingest.add_argument("--project")
+    harvest_ingest.add_argument("--dry-run", action="store_true")
+    harvest_ingest.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    harvest_status = harvest_subparsers.add_parser("status", help="Show harvester status")
+    harvest_status.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     setup_parser = subparsers.add_parser("setup", help="Detect or integrate Z-Core into agent configs")
     setup_parser.add_argument("setup_target", choices=["detect", "claude", "gemini", "codex", "all"])
@@ -1204,6 +1228,62 @@ def _main_impl(argv: list[str] | None = None) -> int:
                 print(f"  Healthy: {'yes' if payload['healthy'] else 'no'}")
                 for warning in payload["warnings"]:
                     print(f"  Warning: {warning}")
+            return 0
+
+    if args.command == "ghost":
+        config = load_config(paths)
+        if args.ghost_command == "roles":
+            default_model = str(get_nested(config, "llm_backend", "model", default="gemini-2.5-flash"))
+            roles = get_nested(config, "llm_backend", "roles", default={})
+            if not isinstance(roles, dict):
+                roles = {}
+            payload = {"default_model": default_model, "roles": roles}
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print(f"default\t{default_model}")
+                for role, model in sorted(roles.items()):
+                    print(f"{role}\t{model}")
+            return 0
+
+    if args.command == "harvest":
+        engine = HarvesterEngine(paths)
+        if args.harvest_command == "discover":
+            payload = engine.discover(source=args.source, project=args.project)
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                for item in payload:
+                    print(
+                        f"{item.get('source', '')}\t"
+                        f"{item.get('source_session_id') or item.get('session_id') or item.get('id', '')}\t"
+                        f"{item.get('project', '')}"
+                    )
+            return 0
+        if args.harvest_command == "ingest":
+            payload = engine.ingest(source=args.source, project=args.project, dry_run=args.dry_run)
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                totals = payload["totals"]
+                print(
+                    f"Discovered: {totals['discovered']}  "
+                    f"Ingested: {totals['ingested']}  "
+                    f"Skipped: {totals['skipped']}  "
+                    f"Errors: {totals['errors']}"
+                )
+            return 0
+        if args.harvest_command == "status":
+            payload = engine.status()
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print("Harvester Status")
+                print(f"  Harvested: {payload['harvested_count']}")
+                print(f"  Directory: {payload['harvest_dir']}")
+                for name, health in payload["adapters"].items():
+                    ok = health.get("ok", health.get("available", False))
+                    print(f"  {name}: {'ok' if ok else 'unavailable'}")
             return 0
 
     if args.command == "setup":

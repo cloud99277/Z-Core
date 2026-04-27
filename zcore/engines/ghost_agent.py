@@ -82,7 +82,10 @@ class GhostAgent:
         return str(get_nested(self.config, "llm_backend", "model", default="gemini-2.5-flash"))
 
     def max_prompt_tokens(self) -> int:
-        context_window = get_context_window(self.prompt_model())
+        return self._max_prompt_tokens_for_model(self.prompt_model())
+
+    def _max_prompt_tokens_for_model(self, model: str) -> int:
+        context_window = get_context_window(model)
         max_output_tokens = self.DEFAULT_MAX_OUTPUT_TOKENS
         budget = context_window - max_output_tokens - self.PROMPT_SAFETY_MARGIN
         return max(budget, 1024)
@@ -92,6 +95,7 @@ class GhostAgent:
         prompt: str,
         fallback_text: str | None = None,
         *,
+        role: str | None = None,
         session_id: str | None = None,
         skill_name: str | None = None,
     ) -> dict[str, object]:
@@ -101,58 +105,84 @@ class GhostAgent:
                 "text": fallback_text or self._fallback_text(prompt),
                 "mode": "fallback",
                 "reason": str(status["reason"]),
+                "role": role,
             }
 
         timeout = int(get_nested(self.config, "llm_backend", "timeout", default=30))
         retry_max = int(get_nested(self.config, "llm_backend", "retry_max", default=2))
         fallback_on_failure = bool(get_nested(self.config, "llm_backend", "fallback_on_failure", default=True))
         provider = str(status["provider"])
-        sanitized_prompt = self._truncate_prompt_to_budget(self._sanitize_text(prompt))
-        input_tokens = estimate_tokens(sanitized_prompt, self.prompt_model())
         observability = ObservabilityEngine(self.paths)
+        default_model = self.prompt_model()
+        role_model = self._role_model(role) if role is not None else None
 
-        last_error: Exception | None = None
-        for _ in range(retry_max + 1):
-            try:
-                response = self._perform_request(provider, sanitized_prompt, timeout=timeout)
-                text = self._extract_text_from_response(response, provider).strip()
-                if text:
-                    output_tokens = estimate_tokens(text, self.prompt_model())
-                    observability.log_cost(
-                        provider,
-                        self.prompt_model(),
-                        input_tokens,
-                        output_tokens,
-                        self._estimate_cost_usd(provider, self.prompt_model(), input_tokens, output_tokens),
-                        session_id=session_id,
-                        skill_name=skill_name,
-                    )
-                    return {"text": text, "mode": "llm", "reason": ""}
-                last_error = ValueError("empty_response")
-            except (OSError, ValueError, error.HTTPError, error.URLError) as exc:
-                last_error = exc
+        def try_model(model: str) -> tuple[dict[str, object] | None, Exception | None]:
+            sanitized_prompt = self._truncate_prompt_to_budget(self._sanitize_text(prompt), model=model)
+            input_tokens = estimate_tokens(sanitized_prompt, model)
+            last_error: Exception | None = None
+            for _ in range(retry_max + 1):
+                try:
+                    response = self._perform_request(provider, sanitized_prompt, timeout=timeout, model=model)
+                    text = self._extract_text_from_response(response, provider).strip()
+                    if text:
+                        output_tokens = estimate_tokens(text, model)
+                        observability.log_cost(
+                            provider,
+                            model,
+                            input_tokens,
+                            output_tokens,
+                            self._estimate_cost_usd(provider, model, input_tokens, output_tokens),
+                            session_id=session_id,
+                            skill_name=skill_name,
+                        )
+                        return {"text": text, "mode": "llm", "reason": "", "role": role}, None
+                    last_error = ValueError("empty_response")
+                except (OSError, ValueError, error.HTTPError, error.URLError) as exc:
+                    last_error = exc
 
-        observability.log_cost(
-            provider,
-            self.prompt_model(),
-            input_tokens,
-            0,
-            0.0,
-            session_id=session_id,
-            skill_name=skill_name,
-        )
+            observability.log_cost(
+                provider,
+                model,
+                input_tokens,
+                0,
+                0.0,
+                session_id=session_id,
+                skill_name=skill_name,
+            )
+            return None, last_error
+
+        if role_model:
+            response, _ = try_model(role_model)
+            if response is not None:
+                return response
+
+        response, last_error = try_model(default_model)
+        if response is not None:
+            return response
+
         if not fallback_on_failure and last_error is not None:
             return {
                 "text": "",
                 "mode": "error",
                 "reason": f"{type(last_error).__name__}: {last_error}",
+                "role": role,
             }
 
         return {
             "text": fallback_text or self._fallback_text(prompt),
             "mode": "fallback",
             "reason": f"request_failed:{type(last_error).__name__}" if last_error else "request_failed",
+            "role": role,
         }
+
+    def _role_model(self, role: str | None) -> str | None:
+        if role is None:
+            return None
+        model = get_nested(self.config, "llm_backend", "roles", role, default=None)
+        if model is None:
+            return None
+        model_text = str(model).strip()
+        return model_text or None
 
     def _estimate_cost_usd(self, provider: str, model: str, input_tokens: int, output_tokens: int) -> float:
         input_rate, output_rate = self.PRICING_PER_1M_TOKENS.get((provider, model), (0.0, 0.0))
@@ -184,13 +214,13 @@ class GhostAgent:
             "reason": str(status["reason"]),
         }
 
-    def _perform_request(self, provider: str, prompt: str, *, timeout: int) -> dict[str, object]:
-        req = self._build_request(provider, prompt)
+    def _perform_request(self, provider: str, prompt: str, *, timeout: int, model: str | None = None) -> dict[str, object]:
+        req = self._build_request(provider, prompt, model=model)
         with request.urlopen(req, timeout=timeout) as response:
             return json.loads(response.read().decode("utf-8"))
 
-    def _build_request(self, provider: str, prompt: str) -> request.Request:
-        model = str(get_nested(self.config, "llm_backend", "model", default="gemini-2.5-flash"))
+    def _build_request(self, provider: str, prompt: str, *, model: str | None = None) -> request.Request:
+        model = model or str(get_nested(self.config, "llm_backend", "model", default="gemini-2.5-flash"))
         endpoint = str(get_nested(self.config, "llm_backend", "endpoint", default="")).strip()
         api_key = self._api_key()
         headers = {"Content-Type": "application/json"}
@@ -257,9 +287,9 @@ class GhostAgent:
             return "Ghost Agent fallback: no prompt content available."
         return f"Ghost Agent fallback summary:\n{cleaned[:1200]}"
 
-    def _truncate_prompt_to_budget(self, prompt: str) -> str:
-        budget = self.max_prompt_tokens()
-        model = self.prompt_model()
+    def _truncate_prompt_to_budget(self, prompt: str, *, model: str | None = None) -> str:
+        model = model or self.prompt_model()
+        budget = self.max_prompt_tokens() if model == self.prompt_model() else self._max_prompt_tokens_for_model(model)
         if estimate_tokens(prompt, model) <= budget:
             return prompt
 
