@@ -79,7 +79,7 @@ class HermesAdapter(SourceAdapter):
         return HarvestedSession(
             source=self.name(),
             source_session_id=session_id,
-            project=platform,
+            project="",
             started_at=str(payload.get("session_start") or ""),
             ended_at=str(payload["last_updated"]) if payload.get("last_updated") else None,
             messages=messages,

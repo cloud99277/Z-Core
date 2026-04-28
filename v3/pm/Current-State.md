@@ -53,17 +53,19 @@ status_source: single-source-of-truth
 
 - [2026-04-27] 仓库收拢：废弃独立 Z-Core-V3 仓库，V3 在 `v3/develop` 分支开发
 - [2026-04-27] V3.0 MVP = Harvester + GhostAgent 角色切换 + 脱敏 + Session 搜索
-- [2026-04-27] 具身伴侣（RFC-005）降级为 V3.5+ / 独立产品线
+- [2026-04-27] 具身伴侣表现层（RFC-005）降级为 V3.5+ / 独立产品线
+- [2026-04-27] Z-Core Vision Bridge (全局伴侣翻译/视觉解释) 从表现层解耦，作为感知插件提拔至 V3.1
 - [2026-04-27] Dashboard 优先做 TUI（V3.1），Web 版本 V3.2+
 - [2026-04-27] PM Skill 增强：Decision-Log 强制兼容性评估 + 里程碑准出门禁
 
 ## 明确延期
 
 - Planner / Evaluator / Dispatcher → V3.1
+- Z-Core Vision Bridge (全局视觉解释能力) → V3.1
 - TUI Dashboard → V3.1
 - Web Dashboard → V3.2
 - 预测性记忆推送 / 分歧审计器 → V3.2
-- 具身伴侣表现层 → V3.5+ / 独立仓库
+- 具身伴侣表现层 (3D/Live2D等) → V3.5+ / 独立仓库
 - 商业化付费功能 → V3.2+
 - Creator Economy → V4+
 

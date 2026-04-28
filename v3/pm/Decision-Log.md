@@ -91,3 +91,60 @@
 - 需要迁移的内容：无（已有项目的 PM 文件不受影响）
 
 ---
+
+## [2026-04-27] Z-Core Vision Bridge 补丁计划 (Addendum)
+
+**决策：** 将“视觉感知与全局解释（Vision Bridge）”从原“具身伴侣（RFC-005）”的重型表现层中解耦，提拔为轻量级感知插件，并纳入 V3.1 Sprint 目标。
+
+**原因：**
+- 具身表现层（3D/TTS）是“情感”需求，ROI 较低，已正确降级至 V3.5+。
+- “全局翻译/专业名词解释”是强生产力需求，现有工具缺乏“项目上下文感知”。
+- 利用 Gemini 1.5 Flash 视觉能力，实现“屏幕截取 -> 结合 Current-State.md 解释”的闭环，是具身 AI 的关键一步（The Eye & Brain）。
+
+**影响：**
+- V3.0 MVP（Harvester + GhostAgent）目标不变，继续聚焦。
+- 新增 `Addendum-Vision-Bridge.md` 规划文件。
+- V3.1 将并行开发 Planner Engine 和 Vision Bridge。
+
+**兼容性评估：**
+- 对现有接口的影响：需预留 Windows 代理与 WSL2 Z-Core 的通信通道（HTTP/Socket或共享目录监控）。
+- 需要迁移的内容：无。
+
+---
+
+## [2026-04-28] Hermes 数据源采用 JSON 而非 SQLite
+
+**决策：** Hermes adapter 直接读取 `session_*.json` 文件，不使用 `state.db` SQLite 数据库。
+
+**原因：**
+- Task0 探查发现 Hermes 的 `session_*.json` 已包含完整会话数据（messages 数组 + 元数据）
+- 直接读 JSON 比解析 SQLite schema 更简单可靠，且零外部依赖
+- `state.db` 的 schema 未文档化，升级可能变更
+
+**影响：**
+- Sprint-Backlog M1 准出标准从"SQLite 读取测试"更新为"JSON 读取测试"
+- 如未来需要聚合查询（如按时间范围批量过滤），可考虑引入 SQLite
+
+**兼容性评估：**
+- 对现有接口的影响：无
+- 需要迁移的内容：无
+
+---
+
+## [2026-04-28] Claude Adapter list 类型 content 处理（Follow-up）
+
+**决策：** MVP 阶段 Claude adapter 仅处理 `str` 类型的 `message.content`，跳过 `list` 类型（含 tool_use blocks）。记为 M3 follow-up。
+
+**原因：**
+- Claude Code 的 assistant 消息 `content` 有时是 `list[dict]`（包含 `{"type": "text", "text": "..."}` 和 `{"type": "tool_use", ...}`）
+- MVP 阶段优先保证基础文本收割正确性，多模态内容处理属于增强功能
+
+**影响：**
+- 部分包含 tool_use 的 assistant 回复不会被收割
+- M3 需新增 `_extract_content_text(content)` 方法支持 list 类型解析
+
+**兼容性评估：**
+- 对现有接口的影响：无（仅影响收割覆盖率，不影响已收割数据的格式）
+- 需要迁移的内容：无（新 adapter 版本可重新收割未覆盖的会话）
+
+---
