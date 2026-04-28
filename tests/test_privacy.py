@@ -48,3 +48,22 @@ class PrivacyTests(unittest.TestCase):
         self.assertIsNot(sanitized[0], messages[0])
         self.assertEqual(messages[0]["content"], "phone 13800138000")
         self.assertEqual(sanitized[0]["content"], "phone [REDACTED]")
+
+    def test_redact_wsl_mount_path_hides_username(self):
+        text = "cwd: /mnt/c/Users/yangyy/projects/Z-Core"
+        result = redact_text(text)
+        self.assertNotIn("yangyy", result)
+        self.assertIn("[USER]", result)
+
+    def test_redact_windows_backslash_path_hides_username(self):
+        import os
+        text = "path C:\\Users\\yangyy\\Desktop"
+        result = redact_text(text)
+        self.assertNotIn("yangyy", result)
+        self.assertIn("[USER]", result)
+
+    def test_redact_home_path_hides_username(self):
+        text = "/home/alice/.zcore/config.toml"
+        result = redact_text(text)
+        self.assertNotIn("alice", result)
+        self.assertIn("[USER]", result)

@@ -133,17 +133,25 @@ class SearchEngine:
     ) -> SearchHit | None:
         if not terms:
             return None
+        best_snippet: str = ""
+        matched = False
         for text in texts:
             folded = text.casefold()
             if all(term in folded for term in terms):
-                return SearchHit(
-                    source=source,
-                    session_id=session_id,
-                    project=project,
-                    started_at=started_at,
-                    snippet=self._snippet(text, folded, terms),
-                )
-        return None
+                matched = True
+                candidate = self._snippet(text, folded, terms)
+                # Prefer the snippet with more surrounding context (longer = richer)
+                if len(candidate) > len(best_snippet):
+                    best_snippet = candidate
+        if not matched:
+            return None
+        return SearchHit(
+            source=source,
+            session_id=session_id,
+            project=project,
+            started_at=started_at,
+            snippet=best_snippet,
+        )
 
     def _snippet(self, text: str, folded: str, terms: list[str]) -> str:
         positions = [folded.find(term) for term in terms if folded.find(term) >= 0]

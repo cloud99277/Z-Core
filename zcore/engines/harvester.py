@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
+import sys
 from pathlib import Path
 
 from zcore.adapters.base import SourceAdapter
@@ -58,7 +60,9 @@ class HarvesterEngine:
                 )
                 if not session_id:
                     result.skipped += 1
-                    result.errors.append("missing session id")
+                    msg = f"[harvest] adapter={adapter.name()} path={session_path or '?'}: discover() item missing source_session_id — skipping"
+                    result.errors.append(msg)
+                    print(msg, file=sys.stderr)
                     continue
                 key = self._index_key(adapter.name(), session_id)
                 if key in index:
@@ -181,4 +185,12 @@ class HarvesterEngine:
         return f"{source}:{session_id}"
 
     def _safe_filename(self, value: str) -> str:
-        return "".join(char if char.isalnum() or char in "._-" else "_" for char in value).strip("._") or "session"
+        """Return a filesystem-safe filename for a session ID.
+
+        Appends a sha256-derived suffix to prevent collisions when two different
+        source_session_ids map to the same sanitised character sequence (e.g.
+        ``main/abc`` and ``main_abc`` would otherwise both produce ``main_abc``).
+        """
+        safe = "".join(char if char.isalnum() or char in "._-" else "_" for char in value).strip("._") or "session"
+        suffix = hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
+        return f"{safe[:60]}_{suffix}"

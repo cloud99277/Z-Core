@@ -6,7 +6,7 @@
 
 ## 上下文
 
-- 分支 `v3/develop`，101 测试通过，commit `d244d6c`
+- 分支 `v3/develop`，104 测试通过，commit `ecd7d35`（已包含全量审查修复）
 - 已有 `zcore/adapters/base.py`：`SourceAdapter` ABC 接口（`name/discover/ingest/health_check`）
 - 已有 `zcore/adapters/claude_adapter.py`：参考实现（JSONL 解析模式）
 - 已有 `zcore/engines/harvester.py`：`HarvesterEngine`，注册 adapter 用 `register_adapter()`
@@ -110,7 +110,11 @@ class OpenClawAdapter(SourceAdapter):
 **discover() 实现要点**：
 - 遍历 `~/.openclaw/agents/<agent>/sessions/*.json`
 - `project` 参数过滤 agent 目录名
-- 返回列表元素包含：`source_session_id`（文件名去掉 `.json`）、`path`（完整路径）、`project`（agent 名）、`started_at`（文件首行 timestamp）
+- 返回列表元素**必须包含以下字段**（否则 HarvesterEngine 会打印 warning 并跳过）：
+  - `source_session_id`：文件名去掉 `.json`（如 `abc-123-def`）
+  - `path`：完整文件路径字符串（ingest-ignore 规则匹配用）
+  - `project`：agent 目录名（如 `main`、`antigravity`）
+  - `started_at`：文件首行 timestamp（ISO8601）
 
 **ingest() 实现要点**：
 - `session_id` 格式：`<agent_name>/<filename_without_ext>`（如 `main/abc-123`）
@@ -123,12 +127,24 @@ class OpenClawAdapter(SourceAdapter):
 
 ### 2. 注册到 HarvesterEngine
 
-在 `harvester.py` 的 `__init__` 中，将 `OpenClawAdapter` 加入默认注册列表（与 `ClaudeAdapter`、`HermesAdapter` 并列）：
+**必须修改 `harvester.py` 的 `_auto_register_known_adapters()` 方法**（不是只改 `__init__.py`）：
+
+将以下元组追加到 `_auto_register_known_adapters` 内的 `for` 循环列表：
+
+```python
+# harvester.py: _auto_register_known_adapters() 中的元组，追加第三项
+for module_name, class_name in (
+    ("zcore.adapters.claude_adapter", "ClaudeAdapter"),
+    ("zcore.adapters.hermes_adapter", "HermesAdapter"),
+    ("zcore.adapters.openclaw_adapter", "OpenClawAdapter"),  # ← 追加这一行
+):
+```
+
+同时更新 `zcore/adapters/__init__.py` 导出 `OpenClawAdapter`：
 
 ```python
 from zcore.adapters.openclaw_adapter import OpenClawAdapter
-# 在 __init__ 中：
-self.register_adapter(OpenClawAdapter())
+__all__ = ["ClaudeAdapter", "HermesAdapter", "OpenClawAdapter", "SourceAdapter"]
 ```
 
 ### 3. 测试 `tests/test_openclaw_adapter.py`（≥ 5 用例）
@@ -144,10 +160,16 @@ self.register_adapter(OpenClawAdapter())
 
 使用 `unittest.mock.patch.dict("os.environ", ...)` 隔离 HOME 环境，或直接传入 `base_dir` 参数。
 
+**必须新增 ingest-ignore 集成测试**（通过 HarvesterEngine 验证）：
+
+- `test_harvester_skips_openclaw_session_matching_ingest_ignore`：
+  通过 `HarvesterEngine` 的 `ingest()` 方法（传入带 ingest-ignore 文件的 `paths`），验证命中 glob 规则的 OpenClaw session 被计入 `skipped` 而不是 `ingested`。
+  使用 `_isolated_home` 模式（可参考 `tests/test_ingest_ignore.py` 的实现方式）。
+
 ## 交付标准
 
 1. `python3 -m compileall zcore tests` 通过
-2. `python3 -m unittest discover tests -q` 全部通过（101 + ≥ 6 新增）
+2. `python3 -m unittest discover tests -q` 全部通过（104 基线 + ≥ 7 新增）
 3. `zcore harvest discover --source openclaw` 能列出本机真实 session 数量
 4. 所有现有测试不受影响
 

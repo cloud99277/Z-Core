@@ -26,6 +26,10 @@ def redact_text(text: str, patterns: Iterable[str] | None = None, redact_file_pa
     if redact_file_paths:
         result = re.sub(r"/home/([^/\s]+)/", "/home/[USER]/", result)
         result = re.sub(r"/Users/([^/\s]+)/", "/Users/[USER]/", result)
+        # WSL Windows-mount paths: /mnt/c/Users/<name>/
+        result = re.sub(r"/mnt/[a-z]/Users/([^/\s]+)/", "/mnt/[DRIVE]/Users/[USER]/", result)
+        # Windows backslash paths: \Users\<name>\
+        result = re.sub(r"\\Users\\([^\\\s]+)\\", r"\\Users\\[USER]\\", result)
     return result
 
 

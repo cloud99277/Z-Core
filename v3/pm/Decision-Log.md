@@ -176,3 +176,22 @@
 - 需要迁移的内容：现有 101 个测试不得受影响（回归验证为硬性要求）
 
 ---
+
+## [2026-04-29] 确立运行时同步技能 runtime-sync
+
+**决策：** 在 Z-Core Skill 体系中新增 `runtime-sync` 技能，统一管理 5 大核心 Agent（Hermes, OpenClaw, Claude, Gemini, Codex）的同步升级与服务复位逻辑。
+
+**原因：**
+- **复杂性管理**：核心工具链涉及 Git (Hermes)、NPM (OpenClaw/Claude/Gemini) 和独立二进制 (Codex) 三种不同的分发机制，手动维护成本过高。
+- **稳定性保障**：OpenClaw 的 Telegram 桥接在长时间运行或网络抖动后需要自动化的“检查-重启”闭环。
+- **职责解耦**：避免将沉重的环境变更逻辑塞入仅用于诊断的 `runtime-doctor`。
+
+**影响：**
+- 为 Z-Core 提供了自我更新底座的能力。
+- 规范了 Git 环境下的 `stash/pull/restore` 升级标准流。
+
+**兼容性评估：**
+- 对现有接口的影响：无（纯新增基础设施技能）。
+- 需要迁移的内容：无。
+
+---

@@ -19,3 +19,8 @@
 - ✅ M3 隐私脱敏管线：5 种新模式 + sanitize_transcript() + ingest-ignore [Codex]
 - ✅ M4 Session 全文搜索：SearchEngine + AND 搜索 + CLI + gzip 上下文 [Codex]
 - ✅ v3.0.0 发布：合并 v3/develop → main，打 Tag，测试基线 101 pass [Antigravity]
+
+### 2026-04-29
+- ✅ **Infrastructure**: 新增 `runtime-sync` 技能，支持一键更新 Hermes, OpenClaw, Claude, Gemini, Codex [Codex]
+- ✅ **Connectivity**: 实现 OpenClaw Telegram 链接状态检测（基于 update-offset 活跃度分析）[Codex]
+- ✅ **Process**: 封装 Z-Core 运行时服务重启流程，集成 Git Stash 自动冲突预防机制 [Codex]

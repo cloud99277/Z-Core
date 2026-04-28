@@ -7,6 +7,7 @@
 ## 上下文
 
 - 分支 `v3/develop`，Task6 完成后执行（或与 Task6 并行，互不依赖）
+- 代码基线：commit `ecd7d35`（已包含全量审查修复），当前 104 测试通过
 - 已有 `zcore/adapters/base.py`：`SourceAdapter` ABC 接口
 - 已有 `zcore/adapters/claude_adapter.py`：参考实现（JSONL 解析）
 - 已有 `zcore/adapters/openclaw_adapter.py`：Task6 产出（类似 JSONL 事件流）
@@ -121,10 +122,13 @@ class CodexAdapter(SourceAdapter):
 **discover() 实现要点**：
 - 遍历 `~/.codex/sessions/**/*.jsonl`（glob 递归）
 - 用 `_FILENAME_RE` 匹配文件名，提取 `ts`（时间戳）和 `uuid`（session ID）
-- `session_id` = UUID 部分（如 `019d5372-a6f4-79e1-bda3-773a58baaaf9`）
-- `started_at` = 文件名中的时间戳转为 ISO8601（`T` 后的 `-` 替换为 `:`）
-- `project` 字段：从 `turn_context` 行的 `payload.cwd` 提取（扫描首个 `turn_context` 行）；若无则用文件所在日期目录路径
-- 如果 `project` 参数不为 None，按 `project` 字段过滤
+- `session_id` = UUID 部分
+- `started_at` = 文件名中的时间戳转为 ISO8601
+- 返回列表元素**必须包含以下字段**（否则 HarvesterEngine 会打印 warning 并跳过）：
+  - `source_session_id`：UUID 部分
+  - `path`：完整文件路径字符串（ingest-ignore 规则匹配用）
+  - `project`：从 `turn_context` 行读取的 `cwd`
+  - `started_at`：文件名中的 ISO8601 时间戳
 
 **ingest() 实现要点**：
 - 通过 discover 返回的 `path` 字段定位文件
@@ -136,12 +140,25 @@ class CodexAdapter(SourceAdapter):
 
 ### 2. 注册到 HarvesterEngine
 
-在 `harvester.py` 的 `__init__` 中追加：
+**必须修改 `harvester.py` 的 `_auto_register_known_adapters()` 方法**（不是只改 `__init__.py`）：
+
+将以下元组追加到 `_auto_register_known_adapters` 内的 `for` 循环列表：
+
+```python
+# harvester.py: _auto_register_known_adapters() 中的元组，追加第四项
+for module_name, class_name in (
+    ("zcore.adapters.claude_adapter", "ClaudeAdapter"),
+    ("zcore.adapters.hermes_adapter", "HermesAdapter"),
+    ("zcore.adapters.openclaw_adapter", "OpenClawAdapter"),  # Task6 已加
+    ("zcore.adapters.codex_adapter", "CodexAdapter"),          # ← 本任务追加
+):
+```
+
+同时更新 `zcore/adapters/__init__.py` 导出 `CodexAdapter`：
 
 ```python
 from zcore.adapters.codex_adapter import CodexAdapter
-# 在 __init__ 中：
-self.register_adapter(CodexAdapter())
+__all__ = ["ClaudeAdapter", "CodexAdapter", "HermesAdapter", "OpenClawAdapter", "SourceAdapter"]
 ```
 
 ### 3. 测试 `tests/test_codex_adapter.py`（≥ 5 用例）
@@ -154,6 +171,12 @@ self.register_adapter(CodexAdapter())
 - `test_ingest_extracts_cwd_as_project`：从 `turn_context` 行提取 `cwd` 作为项目
 - `test_ingest_handles_missing_turn_context`：无 `turn_context` 时 project 降级为空字符串
 - `test_health_check_ok_when_dir_exists`
+
+**必须新增 ingest-ignore 集成测试**（通过 HarvesterEngine 验证）：
+
+- `test_harvester_skips_codex_session_matching_ingest_ignore`：
+  通过 `HarvesterEngine` 的 `ingest()` 方法，验证命中 glob 规则的 Codex session 被计入 `skipped` 而不是 `ingested`。
+  使用 `_isolated_home` 模式（可参考 `tests/test_ingest_ignore.py`）。
 
 ## 交付标准
 
