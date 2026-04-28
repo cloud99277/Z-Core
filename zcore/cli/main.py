@@ -24,6 +24,7 @@ from zcore.engines.mcp import McpEngine
 from zcore.engines.memory import MemoryEngine
 from zcore.engines.observability import ObservabilityEngine
 from zcore.engines.router import SkillRouter
+from zcore.engines.search import SearchEngine
 from zcore.engines.session import SessionManager
 from zcore.engines.workflow import WorkflowEngine
 from zcore.models.memory import MemoryEntry
@@ -148,6 +149,13 @@ def _build_parser() -> argparse.ArgumentParser:
     session_show = session_subparsers.add_parser("show", help="Show a single session")
     session_show.add_argument("session_id")
     session_show.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    session_search = session_subparsers.add_parser("search", help="Search native and harvested sessions")
+    session_search.add_argument("--query", required=True)
+    session_search.add_argument("--source", choices=["session", "harvested"])
+    session_search.add_argument("--project")
+    session_search.add_argument("--limit", type=int, default=50)
+    session_search.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     session_cleanup = session_subparsers.add_parser("cleanup", help="Clean up old session snapshots")
     session_cleanup.add_argument("--older-than", default="30d")
@@ -863,6 +871,28 @@ def _main_impl(argv: list[str] | None = None) -> int:
                 print(json.dumps(payload, ensure_ascii=False))
             else:
                 print(f"{payload['session_id']}\t{payload['project']}\t{payload['status']}")
+            return 0
+
+        if args.session_command == "search":
+            result = SearchEngine(paths).search(
+                args.query,
+                source=args.source,
+                project=args.project,
+                limit=args.limit,
+            )
+            payload = result.to_dict()
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print(
+                    f"Found {payload['total_hits']} results for \"{args.query}\" "
+                    f"(searched {payload['searched_sessions']} sessions, "
+                    f"{payload['searched_harvested']} harvested in {payload['elapsed_ms']}ms)"
+                )
+                for hit in result.hits:
+                    print()
+                    print(f"[{hit.source}] {hit.session_id}  {hit.project}  {hit.started_at}")
+                    print(f"  {hit.snippet}")
             return 0
 
         if args.session_command == "cleanup":
