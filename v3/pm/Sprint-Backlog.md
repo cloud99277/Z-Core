@@ -13,8 +13,8 @@ goal: 落地 Harvester 收割机 + GhostAgent 角色切换，让 Z-Core 拥有�
 |--------|------|---------|-----------|------|:----:|
 | **M1** | Harvester 收割机原型（Claude + Hermes adapter） | Claude adapter 解析成功率 ≥ 90%；Hermes adapter 通过 JSON 读取测试（决策：弃 SQLite 改用 JSON，见 Task0 报告）；≥ 5 个测试用例通过 | 5-7 天 | 需分析 Claude/Hermes 日志格式 | 🟢 完成 |
 | **M2** | GhostAgent 角色切换 | `generate(role="compact")` 正确路由到 Flash；fallback 降级正常；≥ 3 个测试用例通过 | 1-2 天 | config.toml 已预留 | 🟢 完成 |
-| **M3** | 隐私脱敏管线增强 | API key/password/IP/email/token 模式 100% 脱敏；ingest-ignore 规则生效；≥ 8 个测试用例通过 | 2-3 天 | 复用现有 privacy.py | 🟡 任务已派发 |
-| **M4** | Session 全文搜索 | 1000 条会话搜索 < 2s；多关键词 AND 搜索正确；≥ 5 个测试用例通过 | 2-3 天 | 依赖 M1 产出 | 🟡 任务已派发 |
+| **M3** | 隐私脱敏管线增强 | API key/password/IP/email/token 模式 100% 脱敏；ingest-ignore 规则生效；≥ 8 个测试用例通过 | 2-3 天 | 复用现有 privacy.py | 🟢 完成 |
+| **M4** | Session 全文搜索 | 1000 条会话搜索 < 2s；多关键词 AND 搜索正确；≥ 5 个测试用例通过 | 2-3 天 | 依赖 M1 产出 | 🟢 完成 |
 
 ## M1 任务拆解：Harvester 收割机
 
@@ -37,20 +37,20 @@ goal: 落地 Harvester 收割机 + GhostAgent 角色切换，让 Z-Core 拥有�
 
 ## M3 任务拆解：隐私脱敏
 
-- [ ] 增强 `DEFAULT_PATTERNS`：IPv4 / Email / 手机号 / AWS Key / Bearer Token *(Task4)*
-- [ ] 新增 `sanitize_transcript()` 批量脱敏函数 *(Task4)*
-- [ ] 新增 `load_ingest_ignore()` / `should_ignore()` *(Task4)*
-- [ ] HarvesterEngine.ingest() 集成 ingest-ignore 检查 *(Task4)*
-- [ ] 新增脱敏测试（≥ 5 用例）+ ingest-ignore 测试（≥ 3 用例） *(Task4)*
+- [x] 增强 `DEFAULT_PATTERNS`：IPv4 / Email / 手机号 / AWS Key / Bearer Token *(Task4)*
+- [x] 新增 `sanitize_transcript()` 批量脱敏函数 *(Task4)*
+- [x] 新增 `load_ingest_ignore()` / `should_ignore()` *(Task4)*
+- [x] HarvesterEngine.ingest() 集成 ingest-ignore 检查 *(Task4)*
+- [x] 新增脱敏测试（8 用例）+ ingest-ignore 测试（3 用例）→ 实际 11 用例 *(Task4)*
 
 ## M4 任务拆解：Session 搜索
 
-- [ ] 新建 `zcore/engines/search.py` SearchEngine *(Task5)*
-- [ ] 新建 `zcore/models/search.py` SearchHit + SearchResult *(Task5)*
-- [ ] 实现 `zcore session search --query <keyword> [--source] [--project] [--limit] [--json]` CLI *(Task5)*
-- [ ] 搜索范围：native Session meta + Harvester JSON 文件 *(Task5)*
-- [ ] 多关键词 AND 搜索 + snippet 生成 *(Task5)*
-- [ ] 新增搜索测试（≥ 5 用例） *(Task5)*
+- [x] 新建 `zcore/engines/search.py` SearchEngine *(Task5)*
+- [x] 新建 `zcore/models/search.py` SearchHit + SearchResult *(Task5)*
+- [x] 实现 `zcore session search --query <keyword> [--source] [--project] [--limit] [--json]` CLI *(Task5)*
+- [x] 搜索范围：native Session meta + context.json.gz + Harvester JSON 文件 *(Task5)*
+- [x] 多关键词 AND 搜索 + snippet 生成 *(Task5)*
+- [x] 新增搜索测试（7 用例） *(Task5)*
 
 ## MVP 阶段明确不做
 
