@@ -7,7 +7,7 @@ from pathlib import Path
 from zcore.adapters.base import SourceAdapter
 from zcore.models.harvester import HarvestResult, HarvestedSession
 from zcore.runtime import RuntimePaths
-from zcore.utils.privacy import redact_text
+from zcore.utils.privacy import load_ingest_ignore, redact_text, should_ignore
 
 
 class HarvesterEngine:
@@ -38,6 +38,7 @@ class HarvesterEngine:
         dry_run: bool = False,
     ) -> dict[str, object]:
         index = self._load_index()
+        ignore_patterns = load_ingest_ignore(self.paths.base_dir / "ingest-ignore")
         results: list[dict[str, object]] = []
         totals = {"discovered": 0, "ingested": 0, "skipped": 0, "errors": 0}
 
@@ -45,6 +46,10 @@ class HarvesterEngine:
             discovered = adapter.discover(project=project)
             result = HarvestResult(source=adapter.name(), discovered=len(discovered), ingested=0, skipped=0)
             for item in discovered:
+                session_path = str(item.get("path") or "")
+                if session_path and should_ignore(session_path, ignore_patterns):
+                    result.skipped += 1
+                    continue
                 session_id = str(
                     item.get("source_session_id")
                     or item.get("session_id")
