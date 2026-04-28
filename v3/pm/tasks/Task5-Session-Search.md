@@ -15,6 +15,13 @@
 - CLI 使用 argparse，`zcore/cli/main.py`
 - 零外部依赖
 
+### Current-State 快照
+
+- M1 Harvester 收割机 🟢 完成
+- M2 GhostAgent 角色切换 🟢 完成
+- M3 隐私脱敏管线 🟢 完成（前置依赖，Task4）
+- **M4 Session 全文搜索 ← 本任务**
+
 ## Allowed write set
 
 - `zcore/engines/search.py` — 新建
@@ -140,3 +147,10 @@ Found 3 results for "harvester adapter" (searched 42 sessions, 89 harvested in 3
 - 搜索是只读操作，不写入任何文件
 - 不建索引文件（MVP 直接扫描，V3.1 可考虑 sqlite-fts5）
 - 使用 `from tests.helpers import run_zcore, TestHome`
+
+## 执行协议 (delegated-sprint Step 2)
+
+1. **Handshake**: 在编写任何代码前，先输出对任务的理解大纲和预估改动文件清单。
+2. **Boundary**: 严禁修改 **Allowed Write Set** 之外的任何文件。
+3. **Validation**: 完成后必须运行 `python3 -m unittest discover tests -q` 并提供 `code-review` 自审报告。
+4. **Commit**: 使用 `feat(v3):` 前缀提交，消息包含测试通过数量。

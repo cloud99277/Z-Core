@@ -6,11 +6,18 @@
 
 ## 上下文
 
-- 分支 `v3/develop`，83 测试通过，commit `4d07b39`
+- 分支 `v3/develop`，83 测试通过，commit `8f0133a`
 - 已有 `zcore/utils/privacy.py`：`redact_text()` 函数（3 个 DEFAULT_PATTERNS + 文件路径脱敏）
 - 已有 `zcore/engines/harvester.py`：`_redact_session()` 调用 `redact_text()` 逐字段脱敏
 - 已有 `tests/helpers.py`：`run_zcore`, `TestHome`
 - 零外部依赖
+
+### Current-State 快照
+
+- M1 Harvester 收割机 🟢 完成
+- M2 GhostAgent 角色切换 🟢 完成
+- **M3 隐私脱敏管线 ← 本任务**
+- M4 Session 全文搜索（依赖本任务）
 
 ## Allowed write set
 
@@ -125,3 +132,10 @@ def should_ignore(session_path: str, patterns: list[str]) -> bool:
 - 零外部依赖（re + fnmatch + pathlib，全部 stdlib）
 - 现有 `redact_text()` 调用方（harvester, ghost_agent, session）行为自动增强（因为 DEFAULT_PATTERNS 扩展）
 - 不引入新的 config.toml 区块
+
+## 执行协议 (delegated-sprint Step 2)
+
+1. **Handshake**: 在编写任何代码前，先输出对任务的理解大纲和预估改动文件清单。
+2. **Boundary**: 严禁修改 **Allowed Write Set** 之外的任何文件。
+3. **Validation**: 完成后必须运行 `python3 -m unittest discover tests -q` 并提供 `code-review` 自审报告。
+4. **Commit**: 使用 `fix(v3):` 或 `feat(v3):` 前缀提交，消息包含测试通过数量。
