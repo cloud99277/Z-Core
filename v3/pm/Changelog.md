@@ -11,3 +11,11 @@
 - ✅ V3 工程基建：Breaking Changes 清单 + V3 PM 体系 + 目录结构 [Antigravity]
 - ✅ PM Skill 增强：Decision-Log 强制 Impact 字段 + 里程碑准出标准 + 可选回归验证 [Antigravity]
 - ✅ V3 PM 文件按新规范对齐：Sprint-Backlog 准出标准列 + Decision-Log 兼容性评估 [Antigravity]
+
+### 2026-04-28
+- ✅ M1 Harvester 收割机（Claude + Hermes adapter）+ 21 个测试用例 [Codex]
+- ✅ M2 GhostAgent 角色切换（role 路由 + fallback）[Codex]
+- ✅ 代码审查修复：ISSUE-1 Hermes project 字段、ISSUE-2 Claude list content、ISSUE-3 测试隔离 [Antigravity]
+- ✅ M3 隐私脱敏管线：5 种新模式 + sanitize_transcript() + ingest-ignore [Codex]
+- ✅ M4 Session 全文搜索：SearchEngine + AND 搜索 + CLI + gzip 上下文 [Codex]
+- ✅ v3.0.0 发布：合并 v3/develop → main，打 Tag，测试基线 101 pass [Antigravity]
