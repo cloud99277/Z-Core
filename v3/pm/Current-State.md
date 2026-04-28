@@ -1,8 +1,8 @@
 ---
 project: Z-Core-V3
-stage: V3.0 MVP — 🟢 全部里程碑完成，Sprint 关闭
+stage: V3.1 Sprint — 扩展 Adapter + 搜索索引化
 owner: yangyy
-last_updated: 2026-04-28
+last_updated: 2026-04-29
 status_source: single-source-of-truth
 ---
 
@@ -10,74 +10,63 @@ status_source: single-source-of-truth
 
 ## 当前阶段目标
 
-~~完成 V3.0 MVP~~ → ✅ **已完成**。Harvester 收割机 + GhostAgent 角色切换 + 隐私脱敏 + Session 搜索全部落地。
+完成 V3.1：将 Harvester 收割机扩展到 OpenClaw / Codex / Gemini 三大本地 Agent，并将 Session 搜索升级为 sqlite-fts5 索引模式，让跨 Agent 数据收割和极速检索成为现实。
 
 ## 本阶段成功标准
 
-- [x] `zcore harvest discover/ingest/status` CLI 可用
-- [x] Claude adapter 能正确解析 ≥ 90% 的会话日志（含 list content）
-- [x] Hermes adapter 能正确解析 JSON session 存储
-- [x] GhostAgent 支持按 role 路由到不同模型
-- [x] 收割数据经过脱敏管线（API key/密码/IP/Email/手机号/Bearer Token）
-- [x] `zcore session search --query` 全文检索可用（AND 搜索 + snippet + gzip 上下文）
-- [x] 新增 ≥ 15 个测试用例 → 实际 39 个（101 总计）
+- [ ] OpenClaw Adapter：可以 discover + ingest `~/.openclaw/agents/*/sessions/` 所有事件流
+- [ ] Codex Adapter：可以 discover + ingest `~/.codex/sessions/` 所有 JSONL 会话
+- [ ] Gemini Adapter：可以 discover + ingest `~/.gemini/history/` 按项目分组的会话
+- [ ] SearchEngine FTS：索引模式搜索延迟 < 100ms（基线 JSON 扫描 < 2s）
+- [ ] 回归：现有 101 个测试全部通过
+- [ ] 新增 ≥ 20 个测试用例
 
-## 里程碑总结
+## 里程碑总结（V3.0 完成）
 
 | 里程碑 | 状态 | 提交 | 测试 |
 |--------|:----:|------|:----:|
-| M1 Harvester 收割机 | 🟢 完成 | `25c7645` + `4d07b39` (review fix) | 15 |
-| M2 GhostAgent 角色切换 | 🟢 完成 | `25c7645` + `4d07b39` (review fix) | 5 |
+| M1 Harvester 收割机 | 🟢 完成 | `25c7645` + `4d07b39` | 15 |
+| M2 GhostAgent 角色切换 | 🟢 完成 | `25c7645` + `4d07b39` | 5 |
 | M3 隐私脱敏管线 | 🟢 完成 | `731c5ae` | 11 |
 | M4 Session 全文搜索 | 🟢 完成 | `367fee9` | 7 |
 
-## 已完成
+## V3.1 里程碑（进行中）
 
-- [x] V3 构思全景梳理与 PM 审查（2026-04-27）
-- [x] V3 MVP 范围定义
-- [x] PM 管理体系初始化
-- [x] 仓库收拢：废弃独立仓库，回归 `v3/develop` 分支（v2.0.0 Tag 已打）
-- [x] PM Skill 增强：Impact 字段 + Gate Criteria + 回归验证
-- [x] V3 PM 文件按新规范对齐
-- [x] M1 Harvester 收割机（Task0 探查 + Task1 骨架 + Task2 Adapter）
-- [x] M2 GhostAgent 角色切换（Task3）
-- [x] Codex M1/M2 代码审查 + 3 个 Issue 修复
-- [x] M3 隐私脱敏管线增强（Task4）
-- [x] M4 Session 全文搜索（Task5）
-- [x] Codex M3/M4 代码审查 — LGTM
-- [x] 审查报告入库 `v3/pm/reviews/`
-- [x] Sprint Backlog 全部子任务关闭
+| 里程碑 | 状态 | 负责方 |
+|--------|:----:|--------|
+| M5 OpenClaw Adapter | ⚪ 待启动 | Codex |
+| M6 Codex Adapter | ⚪ 待启动 | Codex |
+| M7 Gemini Adapter | ⚪ 待启动 | Codex |
+| M8 SearchEngine 索引化 | ⚪ 待启动 | Codex |
 
-## 下一步 (V3.1)
+## 数据格式快照（已探明）
 
-- [ ] Planner Engine
-- [ ] Z-Core Vision Bridge (全局视觉解释能力)
-- [ ] TUI Dashboard
-- [ ] 合并 `v3/develop` → `main` 并打 `v3.0.0` Tag
+| Source | 格式 | 路径 |
+|--------|------|------|
+| OpenClaw | 换行分隔 JSON，`type:"message"` 事件流，多 agent | `~/.openclaw/agents/<agent>/sessions/` |
+| Codex | 事件流 JSONL，`type:"response_item"` 含 user/assistant | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` |
+| Gemini | 按 project 分组，`.project_root` 映射项目路径 | `~/.gemini/history/<project>/` |
 
-## 最新决策
+## 阻塞点
 
-- [2026-04-27] 仓库收拢：废弃独立 Z-Core-V3 仓库，V3 在 `v3/develop` 分支开发
-- [2026-04-27] V3.0 MVP = Harvester + GhostAgent 角色切换 + 脱敏 + Session 搜索
-- [2026-04-27] 具身伴侣表现层（RFC-005）降级为 V3.5+ / 独立产品线
-- [2026-04-27] Z-Core Vision Bridge 从表现层解耦，作为感知插件提拔至 V3.1
-- [2026-04-28] Hermes 数据源采用 JSON 而非 SQLite
-- [2026-04-28] Claude Adapter 支持 list 类型 content（ISSUE-2 已修复）
+- Gemini 会话文件格式需 M5/M6 完成后实测确认（`.project_root` 已知，内层文件格式待探）
+
+## 当前最大风险
+
+- 三大 Agent 的会话格式随版本更新可能变化（与 M1 Claude/Hermes 同类风险）
+- Gemini history 内层格式尚未完整确认，M7 可能需要调整
 
 ## 明确延期
 
-- Planner / Evaluator / Dispatcher → V3.1
-- Z-Core Vision Bridge (全局视觉解释能力) → V3.1
-- TUI Dashboard → V3.1
+- Vision Bridge → V3.2
+- Planner / Evaluator / Dispatcher → V3.1+
+- TUI Dashboard → V3.2
 - Web Dashboard → V3.2
-- 预测性记忆推送 / 分歧审计器 → V3.2
-- 具身伴侣表现层 (3D/Live2D等) → V3.5+ / 独立仓库
-- 商业化付费功能 → V3.2+
+- SearchEngine 索引化自动 hook（post-ingest 自动触发）→ V3.2
 
 ## 技术快照
 
 - **分支**: `v3/develop`
-- **HEAD**: `367fee9`
+- **HEAD**: `e96e26d`
 - **测试基线**: 101 pass / 0 fail / 1 skip
-- **Python**: ≥3.11, 零外部依赖
-- **V3 新增文件**: 15 files, ~2000 lines
+- **Python**: ≥3.11, 零外部依赖（M8 允许引入 stdlib sqlite3）

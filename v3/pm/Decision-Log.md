@@ -149,3 +149,30 @@
 - 需要迁移的内容：无（新 adapter 版本可重新收割未覆盖的会话）
 
 ---
+
+## [2026-04-29] V3.1 Sprint 范围确认：Adapter 扩展 + 搜索索引化
+
+**决策：** V3.1 = M5 OpenClaw Adapter + M6 Codex Adapter + M7 Gemini Adapter + M8 SearchEngine sqlite-fts5 索引化。Vision Bridge 推迟至 V3.2。
+
+**原因：**
+- OpenClaw/Codex/Gemini 是用户每日使用的主力 Agent，历史对话数据收割价值最高
+- Adapter 架构已由 M1/M2 完全验证，新增 Adapter 是纯"填空题"，风险极低
+- 随 Adapter 数量增加，搜索数据量成倍增长，现在引入 FTS 索引是正确时机
+- Vision Bridge 方向正确但架构复杂（需 Windows 代理 + WSL 桥接），不急
+
+**Adapter 优先级：** OpenClaw > Codex > Gemini（按用户使用频率）
+
+**数据格式已探明：**
+- OpenClaw：`~/.openclaw/agents/<agent>/sessions/`，换行分隔 JSON 事件流，`type:"message"`
+- Codex：`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`，事件流 JSONL，`type:"response_item"`
+- Gemini：`~/.gemini/history/<project>/`，`.project_root` 映射项目路径，内层格式待 M7 前确认
+
+**影响：**
+- V3.2 计划新增：Vision Bridge、TUI Dashboard
+- `Sprint-Backlog-V3.1.md` 新建，包含 M5-M8 四个里程碑
+
+**兼容性评估：**
+- 对现有接口的影响：Adapter 注册到 HarvesterEngine 默认列表；SearchEngine 降级策略保证向后兼容
+- 需要迁移的内容：现有 101 个测试不得受影响（回归验证为硬性要求）
+
+---
