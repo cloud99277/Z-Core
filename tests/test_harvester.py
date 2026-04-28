@@ -45,6 +45,8 @@ class HarvesterTests(unittest.TestCase):
         with self._isolated_home() as home:
             paths = RuntimePaths.discover()
             engine = HarvesterEngine(paths)
+            # Clear auto-registered adapters that may point to real Path.home()
+            engine.adapters.clear()
 
             self.assertEqual(engine.discover(source="missing"), [])
             self.assertTrue(home.exists())

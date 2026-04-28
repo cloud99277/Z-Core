@@ -201,3 +201,46 @@ class AdapterTests(unittest.TestCase):
             (sessions / "request_dump_1.json").write_text("{}", encoding="utf-8")
 
             self.assertEqual(HermesAdapter(sessions).discover(), [])
+
+    def test_claude_extracts_text_from_list_content(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            projects = Path(tempdir) / "projects" / "-home-yangyy"
+            projects.mkdir(parents=True)
+            (projects / "abc.jsonl").write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "type": "user",
+                                "sessionId": "s1",
+                                "timestamp": "2026-04-27T01:00:00Z",
+                                "message": {"role": "user", "content": "explain this code"},
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "type": "assistant",
+                                "sessionId": "s1",
+                                "timestamp": "2026-04-27T01:01:00Z",
+                                "message": {
+                                    "role": "assistant",
+                                    "content": [
+                                        {"type": "text", "text": "Here is the explanation."},
+                                        {"type": "tool_use", "id": "t1", "name": "read_file", "input": {}},
+                                        {"type": "text", "text": "And some more details."},
+                                    ],
+                                },
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            session = ClaudeAdapter(Path(tempdir) / "projects").ingest("s1")
+
+        self.assertIsNotNone(session)
+        self.assertEqual(len(session.messages), 2)
+        self.assertIn("Here is the explanation.", session.messages[1]["content"])
+        self.assertIn("And some more details.", session.messages[1]["content"])
+        self.assertNotIn("tool_use", session.messages[1]["content"])

@@ -133,15 +133,16 @@
 
 ## [2026-04-28] Claude Adapter list 类型 content 处理（Follow-up）
 
-**决策：** MVP 阶段 Claude adapter 仅处理 `str` 类型的 `message.content`，跳过 `list` 类型（含 tool_use blocks）。记为 M3 follow-up。
+**决策：** ~~MVP 阶段 Claude adapter 仅处理 `str` 类型的 `message.content`~~ → 已修复。新增 `_extract_content_text()` 方法支持 `str` 和 `list[dict]` 两种格式。
 
 **原因：**
 - Claude Code 的 assistant 消息 `content` 有时是 `list[dict]`（包含 `{"type": "text", "text": "..."}` 和 `{"type": "tool_use", ...}`）
-- MVP 阶段优先保证基础文本收割正确性，多模态内容处理属于增强功能
+- 审查时评估修复成本极低（新增 12 行 static method），决定直接修复而非 defer
 
 **影响：**
-- 部分包含 tool_use 的 assistant 回复不会被收割
-- M3 需新增 `_extract_content_text(content)` 方法支持 list 类型解析
+- Claude adapter 现在正确提取 list 类型 content 中的 text 部分
+- tool_use blocks 被安全跳过（只保留 text 块）
+- 新增测试用例 `test_claude_extracts_text_from_list_content` 覆盖此场景
 
 **兼容性评估：**
 - 对现有接口的影响：无（仅影响收割覆盖率，不影响已收割数据的格式）

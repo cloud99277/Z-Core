@@ -107,8 +107,8 @@ class ClaudeAdapter(SourceAdapter):
             if not isinstance(message, dict):
                 continue
             role = str(message.get("role") or item.get("type") or "")
-            content = message.get("content")
-            if not isinstance(content, str):
+            content = self._extract_content_text(message.get("content"))
+            if not content:
                 continue
             messages.append({"role": role, "content": content})
             if not session_id and item.get("sessionId"):
@@ -147,3 +147,18 @@ class ClaudeAdapter(SourceAdapter):
         except ValueError:
             value = str(path)
         return hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
+
+    @staticmethod
+    def _extract_content_text(content: object) -> str:
+        """Extract text from Claude message content (str or list of content blocks)."""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            texts = []
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    text = block.get("text", "")
+                    if isinstance(text, str) and text.strip():
+                        texts.append(text)
+            return "\n".join(texts)
+        return ""
