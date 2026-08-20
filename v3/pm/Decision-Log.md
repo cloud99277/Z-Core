@@ -265,3 +265,24 @@ M5 OpenClaw Adapter can proceed without gaining L2/L3 ownership.
 - No external watcher, index, L2, L3, or source corpus changed.
 
 ---
+
+## [2026-08-20] Commit M5 OpenClaw Adapter
+
+**Decision:** Add OpenClaw as a read-only Harvester source in `bd0a767` after
+the G0 governance boundary was committed.
+
+**Reason:** OpenClaw event streams are a local, high-value session source. The
+adapter is kept bounded to source discovery and message extraction so existing
+Harvester ignore and privacy controls remain the only persistence path.
+
+**Impact:** M5 supports `.json` and `.jsonl` event streams, path-safe public
+IDs, symbolic-link rejection, tool-event filtering, and error visibility. M6
+Codex Adapter is now the next independent V3.1 milestone.
+
+**Compatibility assessment:**
+- Existing Claude and Hermes adapters retain their interfaces.
+- OpenClaw source files are only read; L2/L3, external indexes, and watchers
+  remain outside this change.
+- Error payloads are redacted and deduplicated within a harvest operation.
+
+---

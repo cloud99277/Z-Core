@@ -1,6 +1,6 @@
 ---
 project: Z-Core-V3
-stage: V3.1 M5 — OpenClaw Adapter
+stage: V3.1 M6 — Codex Adapter
 owner: yangyy
 last_updated: 2026-08-20
 status_source: Current-State plus pm/status-snapshots/2026-08-20-s0-baseline.md
@@ -10,10 +10,10 @@ status_source: Current-State plus pm/status-snapshots/2026-08-20-s0-baseline.md
 
 ## Current Evidence Status (2026-08-20)
 
-The repository is on `v3/develop` at `094803b`. The G0A-G0C boundary is
-committed; the remaining dirty worktree contains unapproved Phase 1 candidates
-and unrelated V3 planning material. No candidate below is a release or
-deployment claim.
+The repository is on `v3/develop` at `bd0a767`. The G0A-G0C boundary and M5
+OpenClaw adapter are committed; the remaining dirty worktree contains unapproved
+Phase 1 candidates and unrelated V3 planning material. No candidate below is a
+release or deployment claim.
 
 | Work item | State | Evidence / boundary |
 | --- | --- | --- |
@@ -21,11 +21,12 @@ deployment claim.
 | G0B external-readonly health | `committed` (`094803b`) | Health reads a versioned manifest; index writes are frozen before optional-RAG imports. |
 | G0C watcher audit rehearsal | `committed` (`094803b`) | Repository fixture audit only; no live watcher, service, index, source, L2, or L3 change. |
 | Phase 1 knowledge contract | `candidate`, unapproved | Candidate modules remain outside the active CLI surface; no retrieval, migration, or external search is enabled. |
-| V3.1 M5 OpenClaw Adapter | `ready` | G0 commit is complete; implementation is isolated from Phase 1. |
-| V3.1 M6-M8 | `planned` | No Codex/Gemini adapters or FTS index implementation exists yet. |
+| V3.1 M5 OpenClaw Adapter | `committed` (`bd0a767`) | Read-only JSON/JSONL ingestion, path-safe IDs, error visibility, ingest-ignore, and redaction are covered by isolated tests. |
+| V3.1 M6 Codex Adapter | `ready` | M5 is committed; implementation remains independent of Phase 1. |
+| V3.1 M7-M8 | `planned` | No Gemini adapter or FTS index implementation exists yet. |
 
-Current test evidence is `149 passed, 1 skipped`; the focused G0 suite is
-`22 passed, 1 skipped`. Source rebuild remains unverified because the current
+Current test evidence is `168 passed, 1 skipped`; the focused G0/M5 suite is
+`60 passed, 1 skipped`. Source rebuild remains unverified because the current
 virtual environment lacks the declared `setuptools.build_meta` backend.
 
 ## Knowledge Governance Remediation (2026-08-07)
@@ -61,12 +62,12 @@ virtual environment lacks the declared `setuptools.build_meta` backend.
 | M3 隐私脱敏管线 | 🟢 完成 | `731c5ae` | 11 |
 | M4 Session 全文搜索 | 🟢 完成 | `367fee9` | 7 |
 
-## V3.1 里程碑（M5 已就绪）
+## V3.1 里程碑（M6 已就绪）
 
 | 里程碑 | 状态 | 负责方 |
 |--------|:----:|--------|
-| M5 OpenClaw Adapter | 🟡 就绪 | Codex |
-| M6 Codex Adapter | ⚪ 待启动 | Codex |
+| M5 OpenClaw Adapter | 🟢 完成 | Codex |
+| M6 Codex Adapter | 🟡 就绪 | Codex |
 | M7 Gemini Adapter | ⚪ 待启动 | Codex |
 | M8 SearchEngine 索引化 | ⚪ 待启动 | Codex |
 
@@ -99,7 +100,7 @@ virtual environment lacks the declared `setuptools.build_meta` backend.
 ## 技术快照
 
 - **分支**: `v3/develop`
-- **HEAD**: `094803b`（G0A-G0C committed; remaining worktree candidates are unapproved）
-- **测试基线**: 149 pass / 0 fail / 1 skip
+- **HEAD**: `bd0a767`（G0A-G0C and M5 committed; remaining worktree candidates are unapproved）
+- **测试基线**: 168 pass / 0 fail / 1 skip
 - **构建状态**: blocked — current `.venv` cannot import `setuptools.build_meta`
 - **Python**: ≥3.11, 零外部依赖（M8 允许引入 stdlib sqlite3）

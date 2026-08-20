@@ -27,8 +27,8 @@ V3 roadmap material. The commit is not a release or deployment claim. See
 
 | 里程碑 | 目标 | 准出标准 | 预计工作量 | 依赖 | 状态 |
 |--------|------|---------|-----------|------|:----:|
-| **M5** | OpenClaw Adapter | discover `~/.openclaw/agents/*/sessions/` 下所有 JSON 事件流；正确提取 `user`/`assistant` 消息对；过滤 `toolResult`/`toolCall` 等噪声；≥5 个测试 | 2-3 天 | G0A-G0C committed | 🟡 就绪 |
-| **M6** | Codex Adapter | discover `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`；提取 `response_item` 类型中的 user/assistant 消息；≥5 个测试 | 2-3 天 | 格式已探明 | ⚪ 待启动 |
+| **M5** | OpenClaw Adapter | discover `~/.openclaw/agents/*/sessions/` 下所有 JSON 事件流；正确提取 `user`/`assistant` 消息对；过滤 `toolResult`/`toolCall` 等噪声；≥5 个测试 | 2-3 天 | G0A-G0C committed | 🟢 `bd0a767` |
+| **M6** | Codex Adapter | discover `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`；提取 `response_item` 类型中的 user/assistant 消息；≥5 个测试 | 2-3 天 | M5 committed | 🟡 就绪 |
 | **M7** | Gemini Adapter | discover `~/.gemini/history/<project>/` 目录；读取 `.project_root` 映射项目路径；提取对话消息；≥5 个测试 | 2-3 天 | M5/M6 完成后 | ⚪ 待启动 |
 | **M8** | SearchEngine 索引化 | 引入 sqlite-fts5 索引；搜索延迟从 <2s 降至 <100ms；向后兼容无索引降级；≥5 个测试 | 3-4 天 | M5 数据量验证 | ⚪ 待启动 |
 
