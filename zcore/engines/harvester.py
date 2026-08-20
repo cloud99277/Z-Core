@@ -47,6 +47,7 @@ class HarvesterEngine:
         for adapter in self._selected_adapters(source):
             discovered = adapter.discover(project=project)
             result = HarvestResult(source=adapter.name(), discovered=len(discovered), ingested=0, skipped=0)
+            self._append_result_errors(result, self._drain_adapter_errors(adapter))
             for item in discovered:
                 session_path = str(item.get("path") or "")
                 if session_path and should_ignore(session_path, ignore_patterns):
@@ -61,8 +62,9 @@ class HarvesterEngine:
                 if not session_id:
                     result.skipped += 1
                     msg = f"[harvest] adapter={adapter.name()} path={session_path or '?'}: discover() item missing source_session_id — skipping"
-                    result.errors.append(msg)
-                    print(msg, file=sys.stderr)
+                    redacted_msg = redact_text(msg)
+                    self._append_result_errors(result, [redacted_msg])
+                    print(redacted_msg, file=sys.stderr)
                     continue
                 key = self._index_key(adapter.name(), session_id)
                 if key in index:
@@ -71,8 +73,9 @@ class HarvesterEngine:
                 try:
                     harvested = adapter.ingest(session_id)
                 except Exception as exc:  # Adapter failures should not abort the whole harvest.
-                    result.errors.append(f"{session_id}: {type(exc).__name__}: {exc}")
+                    self._append_result_errors(result, [f"{session_id}: {type(exc).__name__}: {exc}"])
                     continue
+                self._append_result_errors(result, self._drain_adapter_errors(adapter))
                 if harvested is None:
                     result.skipped += 1
                     continue
@@ -97,6 +100,26 @@ class HarvesterEngine:
 
         return {"dry_run": dry_run, "results": results, "totals": totals}
 
+    def _append_result_errors(self, result: HarvestResult, errors: list[str]) -> None:
+        existing = set(result.errors)
+        for error in errors:
+            redacted_error = redact_text(str(error))
+            if redacted_error not in existing:
+                result.errors.append(redacted_error)
+                existing.add(redacted_error)
+
+    def _drain_adapter_errors(self, adapter: SourceAdapter) -> list[str]:
+        drain_errors = getattr(adapter, "drain_errors", None)
+        if not callable(drain_errors):
+            return []
+        try:
+            errors = drain_errors()
+        except Exception as exc:
+            return [redact_text(f"{adapter.name()}: drain_errors failed: {type(exc).__name__}: {exc}")]
+        if not isinstance(errors, list):
+            return [redact_text(f"{adapter.name()}: drain_errors returned invalid payload")]
+        return [redact_text(str(error)) for error in errors]
+
     def status(self) -> dict[str, object]:
         index = self._load_index()
         return {
@@ -113,6 +136,7 @@ class HarvesterEngine:
         for module_name, class_name in (
             ("zcore.adapters.claude_adapter", "ClaudeAdapter"),
             ("zcore.adapters.hermes_adapter", "HermesAdapter"),
+            ("zcore.adapters.openclaw_adapter", "OpenClawAdapter"),
         ):
             try:
                 module = importlib.import_module(module_name)
