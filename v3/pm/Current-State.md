@@ -1,6 +1,6 @@
 ---
 project: Z-Core-V3
-stage: V3.1 M6 — Codex Adapter
+stage: V3.1 M7 — Gemini format evidence gate
 owner: yangyy
 last_updated: 2026-08-20
 status_source: Current-State plus pm/status-snapshots/2026-08-20-s0-baseline.md
@@ -10,10 +10,10 @@ status_source: Current-State plus pm/status-snapshots/2026-08-20-s0-baseline.md
 
 ## Current Evidence Status (2026-08-20)
 
-The repository is on `v3/develop` at `bd0a767`. The G0A-G0C boundary and M5
-OpenClaw adapter are committed; the remaining dirty worktree contains unapproved
-Phase 1 candidates and unrelated V3 planning material. No candidate below is a
-release or deployment claim.
+The repository is on `v3/develop` at `3a712c9`. The G0A-G0C boundary plus M5
+OpenClaw and M6 Codex adapters are committed; the remaining dirty worktree
+contains unapproved Phase 1 candidates and unrelated V3 planning material. No
+candidate below is a release or deployment claim.
 
 | Work item | State | Evidence / boundary |
 | --- | --- | --- |
@@ -22,11 +22,12 @@ release or deployment claim.
 | G0C watcher audit rehearsal | `committed` (`094803b`) | Repository fixture audit only; no live watcher, service, index, source, L2, or L3 change. |
 | Phase 1 knowledge contract | `candidate`, unapproved | Candidate modules remain outside the active CLI surface; no retrieval, migration, or external search is enabled. |
 | V3.1 M5 OpenClaw Adapter | `committed` (`bd0a767`) | Read-only JSON/JSONL ingestion, path-safe IDs, error visibility, ingest-ignore, and redaction are covered by isolated tests. |
-| V3.1 M6 Codex Adapter | `ready` | M5 is committed; implementation remains independent of Phase 1. |
-| V3.1 M7-M8 | `planned` | No Gemini adapter or FTS index implementation exists yet. |
+| V3.1 M6 Codex Adapter | `committed` (`3a712c9`) | Read-only rollout JSONL ingestion, stable UUID identity, source isolation, and redacted error reporting are covered by isolated tests. |
+| V3.1 M7 Gemini Adapter | `blocked_by_evidence` | A desensitized inner-history format fixture or explicit approval to inspect one is required before implementation. |
+| V3.1 M8 FTS | `planned` | Remains a rebuildable session-derived index, not L2/L3 ownership. |
 
-Current test evidence is `168 passed, 1 skipped`; the focused G0/M5 suite is
-`60 passed, 1 skipped`. Source rebuild remains unverified because the current
+Current test evidence is `181 passed, 1 skipped`; the focused G0/M5/M6 suite is
+`73 passed, 1 skipped`. Source rebuild remains unverified because the current
 virtual environment lacks the declared `setuptools.build_meta` backend.
 
 ## Knowledge Governance Remediation (2026-08-07)
@@ -50,7 +51,7 @@ virtual environment lacks the declared `setuptools.build_meta` backend.
 - [ ] Codex Adapter：可以 discover + ingest `~/.codex/sessions/` 所有 JSONL 会话
 - [ ] Gemini Adapter：可以 discover + ingest `~/.gemini/history/` 按项目分组的会话
 - [ ] SearchEngine FTS：索引模式搜索延迟 < 100ms（基线 JSON 扫描 < 2s）
-- [ ] 回归：当前 149 个非跳过测试全部通过
+- [ ] 回归：当前 181 个非跳过测试全部通过
 - [ ] 新增 ≥ 20 个测试用例
 
 ## 里程碑总结（V3.0 完成）
@@ -62,13 +63,13 @@ virtual environment lacks the declared `setuptools.build_meta` backend.
 | M3 隐私脱敏管线 | 🟢 完成 | `731c5ae` | 11 |
 | M4 Session 全文搜索 | 🟢 完成 | `367fee9` | 7 |
 
-## V3.1 里程碑（M6 已就绪）
+## V3.1 里程碑（M7 等待格式证据）
 
 | 里程碑 | 状态 | 负责方 |
 |--------|:----:|--------|
 | M5 OpenClaw Adapter | 🟢 完成 | Codex |
-| M6 Codex Adapter | 🟡 就绪 | Codex |
-| M7 Gemini Adapter | ⚪ 待启动 | Codex |
+| M6 Codex Adapter | 🟢 完成 | Codex |
+| M7 Gemini Adapter | 🔴 等待格式证据 | Codex |
 | M8 SearchEngine 索引化 | ⚪ 待启动 | Codex |
 
 ## 数据格式快照（已探明）
@@ -100,7 +101,7 @@ virtual environment lacks the declared `setuptools.build_meta` backend.
 ## 技术快照
 
 - **分支**: `v3/develop`
-- **HEAD**: `bd0a767`（G0A-G0C and M5 committed; remaining worktree candidates are unapproved）
-- **测试基线**: 168 pass / 0 fail / 1 skip
+- **HEAD**: `3a712c9`（G0A-G0C, M5, and M6 committed; remaining worktree candidates are unapproved）
+- **测试基线**: 181 pass / 0 fail / 1 skip
 - **构建状态**: blocked — current `.venv` cannot import `setuptools.build_meta`
 - **Python**: ≥3.11, 零外部依赖（M8 允许引入 stdlib sqlite3）

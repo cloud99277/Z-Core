@@ -286,3 +286,26 @@ Codex Adapter is now the next independent V3.1 milestone.
 - Error payloads are redacted and deduplicated within a harvest operation.
 
 ---
+
+## [2026-08-20] Commit M6 Codex Adapter and Gate M7 on Format Evidence
+
+**Decision:** Commit the Codex rollout adapter as `3a712c9`. Do not begin the
+Gemini adapter until a desensitized inner-history fixture is available or a
+separate source-read approval is granted.
+
+**Reason:** Codex has a verified JSONL contract and can retain UUID identity
+across date-path moves. Gemini's inner history format remains unverified; an
+implementation based on directory guesses would be speculative and might read
+private raw conversations unnecessarily.
+
+**Impact:** M6 is complete with duplicate UUID conflicts rejected rather than
+renaming existing sessions. M7 is accurately `blocked_by_evidence`; M8 remains
+independent and session-derived.
+
+**Compatibility assessment:**
+- Codex source files are read-only and errors are redacted before harvesting
+  output is emitted.
+- No Gemini source, external index, L2/L3 data, watcher, or Phase 1 candidate
+  entered this commit.
+
+---
