@@ -1,5 +1,10 @@
 # Sprint 状态 — V3.1 启动
 
+> **Status note (2026-08-20)**: This is the historical V3.1 launch record.
+> Current evidence and convergence status are tracked in `Current-State.md` and
+> `pm/status-snapshots/2026-08-20-s0-baseline.md`. G0A-G0C were committed as
+> `094803b`; M5 is ready, while M6-M8 remain planned.
+
 > **上次更新**: 2026-04-29
 > **当前阶段**: V3.1 Sprint 启动，M5（OpenClaw Adapter）即将派发
 > **分支**: `v3/develop`

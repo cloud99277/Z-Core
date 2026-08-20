@@ -1,12 +1,43 @@
 ---
 project: Z-Core-V3
-stage: V3.1 Sprint — 扩展 Adapter + 搜索索引化
+stage: V3.1 M5 — OpenClaw Adapter
 owner: yangyy
-last_updated: 2026-04-29
-status_source: single-source-of-truth
+last_updated: 2026-08-20
+status_source: Current-State plus pm/status-snapshots/2026-08-20-s0-baseline.md
 ---
 
 # Current State
+
+## Current Evidence Status (2026-08-20)
+
+The repository is on `v3/develop` at `094803b`. The G0A-G0C boundary is
+committed; the remaining dirty worktree contains unapproved Phase 1 candidates
+and unrelated V3 planning material. No candidate below is a release or
+deployment claim.
+
+| Work item | State | Evidence / boundary |
+| --- | --- | --- |
+| G0A candidate-only admission | `committed` (`094803b`) | Automatic extraction remains pending-only; explicit write or pending confirmation is required for L2 admission. |
+| G0B external-readonly health | `committed` (`094803b`) | Health reads a versioned manifest; index writes are frozen before optional-RAG imports. |
+| G0C watcher audit rehearsal | `committed` (`094803b`) | Repository fixture audit only; no live watcher, service, index, source, L2, or L3 change. |
+| Phase 1 knowledge contract | `candidate`, unapproved | Candidate modules remain outside the active CLI surface; no retrieval, migration, or external search is enabled. |
+| V3.1 M5 OpenClaw Adapter | `ready` | G0 commit is complete; implementation is isolated from Phase 1. |
+| V3.1 M6-M8 | `planned` | No Codex/Gemini adapters or FTS index implementation exists yet. |
+
+Current test evidence is `149 passed, 1 skipped`; the focused G0 suite is
+`22 passed, 1 skipped`. Source rebuild remains unverified because the current
+virtual environment lacks the declared `setuptools.build_meta` backend.
+
+## Knowledge Governance Remediation (2026-08-07)
+
+- Phase 0A: automatic extraction is candidate-only; explicit confirmation remains
+  the L2 admission path.
+- Phase 0B: Z-Core consumes a versioned external health manifest through
+  `external_readonly`; it does not own the external L3 index.
+- Phase 0C: the repository watcher is prepared for an audit-only fixture rehearsal.
+  The active external watcher has not been switched, restarted, or reinstalled.
+- This remediation is a prerequisite for any automatic L2/L3 admission and is not
+  part of the M8 session-derived FTS index.
 
 ## 当前阶段目标
 
@@ -18,7 +49,7 @@ status_source: single-source-of-truth
 - [ ] Codex Adapter：可以 discover + ingest `~/.codex/sessions/` 所有 JSONL 会话
 - [ ] Gemini Adapter：可以 discover + ingest `~/.gemini/history/` 按项目分组的会话
 - [ ] SearchEngine FTS：索引模式搜索延迟 < 100ms（基线 JSON 扫描 < 2s）
-- [ ] 回归：现有 101 个测试全部通过
+- [ ] 回归：当前 149 个非跳过测试全部通过
 - [ ] 新增 ≥ 20 个测试用例
 
 ## 里程碑总结（V3.0 完成）
@@ -30,11 +61,11 @@ status_source: single-source-of-truth
 | M3 隐私脱敏管线 | 🟢 完成 | `731c5ae` | 11 |
 | M4 Session 全文搜索 | 🟢 完成 | `367fee9` | 7 |
 
-## V3.1 里程碑（进行中）
+## V3.1 里程碑（M5 已就绪）
 
 | 里程碑 | 状态 | 负责方 |
 |--------|:----:|--------|
-| M5 OpenClaw Adapter | ⚪ 待启动 | Codex |
+| M5 OpenClaw Adapter | 🟡 就绪 | Codex |
 | M6 Codex Adapter | ⚪ 待启动 | Codex |
 | M7 Gemini Adapter | ⚪ 待启动 | Codex |
 | M8 SearchEngine 索引化 | ⚪ 待启动 | Codex |
@@ -59,6 +90,7 @@ status_source: single-source-of-truth
 ## 明确延期
 
 - Vision Bridge → V3.2
+- Voice Bridge → V3.2（RFC-006 已提出，见 `v3/pm/rfc-006-voice-bridge.md` + `v3/pm/Addendum-Voice-Bridge.md`）
 - Planner / Evaluator / Dispatcher → V3.1+
 - TUI Dashboard → V3.2
 - Web Dashboard → V3.2
@@ -67,6 +99,7 @@ status_source: single-source-of-truth
 ## 技术快照
 
 - **分支**: `v3/develop`
-- **HEAD**: `e96e26d`
-- **测试基线**: 101 pass / 0 fail / 1 skip
+- **HEAD**: `094803b`（G0A-G0C committed; remaining worktree candidates are unapproved）
+- **测试基线**: 149 pass / 0 fail / 1 skip
+- **构建状态**: blocked — current `.venv` cannot import `setuptools.build_meta`
 - **Python**: ≥3.11, 零外部依赖（M8 允许引入 stdlib sqlite3）

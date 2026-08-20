@@ -195,3 +195,73 @@
 - 需要迁移的内容：无。
 
 ---
+
+## [2026-04-29] RFC-006：Voice Bridge 双向语音交互层
+
+**决策：** 提出 RFC-006（Voice Bridge），采用混合同级架构（默认三段式 ASR+LLM+TTS，可选 OpenAI Realtime 直连），作为 Z-Core 具身交互的语音双向能力层。
+
+**原因：**
+- RFC-005（具身伴侣）和 Vision Bridge 都是单向的，缺少"用户用语音驱动 Z-Core"的能力
+- OpenAI 开源的 realtime-voice-component 其 VoiceTool 模式与 Z-Core skill 体系天然对齐，但该组件绑定浏览器 WebRTC，无法直接用于 CLI 后端
+- Z-Core 的 skill 已有完整的参数定义和执行能力，只需要加一层 ASR/TTS + 意图路由即可暴露为语音可调用技能
+- 三段式架构保证离线可用、中文 ASR/TTS 可选，不绑定单一供应商
+
+**影响：**
+- V3.1：方案确立，config.toml 预留 `[voice]` 空区块
+- V3.2：Voice Bridge Phase 1（Whisper ASR + Edge-TTS + 别名/关键词意图路由）
+- V3.3：Phase 2（GhostAgent LLM 意图理解 + 多轮对话）
+- V3.5：Phase 3（唤醒词 + Realtime 低延迟 + 对接具身伴侣 Avatar）
+- Voice Bridge 作为 `pip install -e ".[voice]"` 可选 extra，不破坏零依赖核心
+
+**兼容性评估：**
+- 对现有接口的影响：无（纯新增模块）
+- 需要迁移的内容：无
+- 与 Hermes TTS / OpenClaw Voice 的关系：Voice Bridge 作为 Z-Core 统一层，Agent 各自语音能力作为 fallback
+
+---
+
+## [2026-08-07] Knowledge Governance Remediation: Explicit Admission and External Ownership
+
+**Decision:** Z-Core automatic extraction creates reviewable candidates only. L2
+admission requires an explicit write or pending confirmation. L3 Markdown and its
+external index remain owner-managed; Z-Core initially consumes only a versioned
+health manifest through `external_readonly`.
+
+**Reason:** confidence thresholds, a running watcher PID, and a non-empty index are
+not proof of approved knowledge, corpus freshness, or safe rollback. The active
+external watcher is outside this worktree and has not been switched.
+
+**Impact:** Phase 0A-0C covers the admission freeze, health manifest consumer, and
+repository-only audit watcher rehearsal. A live watcher/indexer handover needs a
+separate approval with version inventory, backups, manifest validation, and a
+rollback drill. Session-derived M8 FTS remains rebuildable and does not own L2/L3.
+
+**Compatibility assessment:**
+- Existing manual L2 write and pending-confirm flows remain the admission API.
+- Legacy local RAG commands remain compatibility paths; they do not attest to the
+  external corpus health.
+- No L2/L3 data migration is authorized.
+
+---
+
+## [2026-08-20] Commit the G0A-G0C Governance Boundary
+
+**Decision:** Commit the candidate-only admission freeze, external-readonly
+health facade, and repository-only watcher audit rehearsal as `094803b` before
+starting V3.1 adapter work.
+
+**Reason:** The prior dirty worktree made it impossible to distinguish verified
+governance behavior from unapproved Phase 1 read-contract candidates or V3
+roadmap material.
+
+**Impact:** G0A-G0C are now `committed`, but not released or deployed. Phase 1
+modules remain outside the active CLI surface and require separate approval.
+M5 OpenClaw Adapter can proceed without gaining L2/L3 ownership.
+
+**Compatibility assessment:**
+- Explicit L2 write and pending confirmation remain unchanged.
+- Legacy optional-RAG commands remain compatibility paths; index writes stay
+  blocked under `external_readonly`.
+- No external watcher, index, L2, L3, or source corpus changed.
+
+---
