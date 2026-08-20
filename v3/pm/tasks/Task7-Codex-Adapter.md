@@ -52,9 +52,9 @@
 - `type == "response_item"` + `payload.type == "message"` → 需提取的对话行
 - `payload.role` → `"user"` / `"assistant"`（只保留这两种）
 - `payload.content` → list of blocks，提取 `type in ["text","input_text","output_text"]` 的 `text` 字段
-- `type == "turn_context"` + `payload.cwd` → 项目路径（作为 `project` 字段）
+- `type == "turn_context"` + `payload.cwd` → 完整项目路径（原样作为 `project` 字段）
 - 文件名中的 ISO8601 时间戳 → `started_at`
-- session UUID → `source_session_id`（文件名末尾的 UUID 部分）
+- session UUID → `source_session_id`（文件名末尾的 UUID 部分）；同 UUID 的多个文件按路径排序仅保留第一份，并记录可审计的重复 UUID 错误
 
 **history.jsonl**（仅存用户输入摘要，不用于 ingest，仅用 sessions/ 目录）：
 ```json
@@ -122,7 +122,7 @@ class CodexAdapter(SourceAdapter):
 **discover() 实现要点**：
 - 遍历 `~/.codex/sessions/**/*.jsonl`（glob 递归）
 - 用 `_FILENAME_RE` 匹配文件名，提取 `ts`（时间戳）和 `uuid`（session ID）
-- `session_id` = UUID 部分
+- `session_id` = UUID 部分；若存在重复 UUID，按路径排序仅保留第一份，后续副本跳过并记录错误
 - `started_at` = 文件名中的时间戳转为 ISO8601
 - 返回列表元素**必须包含以下字段**（否则 HarvesterEngine 会打印 warning 并跳过）：
   - `source_session_id`：UUID 部分
@@ -135,7 +135,7 @@ class CodexAdapter(SourceAdapter):
 - 逐行解析，过滤 `type == "response_item"` + `payload.type == "message"`
 - 只保留 `payload.role in ["user", "assistant"]`
 - content 提取：遍历 `payload.content` list，取 `type in ["text","input_text","output_text"]` 的 `text`
-- `project`：从同文件的 `turn_context` 行读取 `payload.cwd`，取最后一个路径组件；无则空字符串
+- `project`：从同文件的 `turn_context` 行读取完整 `payload.cwd`；无则空字符串
 - `ended_at`：最后一条消息的 timestamp
 
 ### 2. 注册到 HarvesterEngine

@@ -137,6 +137,7 @@ class HarvesterEngine:
             ("zcore.adapters.claude_adapter", "ClaudeAdapter"),
             ("zcore.adapters.hermes_adapter", "HermesAdapter"),
             ("zcore.adapters.openclaw_adapter", "OpenClawAdapter"),
+            ("zcore.adapters.codex_adapter", "CodexAdapter"),
         ):
             try:
                 module = importlib.import_module(module_name)
