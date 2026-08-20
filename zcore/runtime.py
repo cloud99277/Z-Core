@@ -29,6 +29,7 @@ class RuntimePaths:
     skills_dir: Path
     knowledge_db_path: Path
     lock_dir: Path
+    knowledge_health_manifest_path: Path | None = None
 
     @classmethod
     def discover(cls) -> "RuntimePaths":
@@ -61,6 +62,9 @@ class RuntimePaths:
             skills_dir=skills_dir,
             knowledge_db_path=knowledge_db_path,
             lock_dir=base_dir / "locks",
+            knowledge_health_manifest_path=Path(
+                os.environ.get("ZCORE_KNOWLEDGE_HEALTH_MANIFEST") or base_dir / "knowledge-health.json"
+            ).expanduser(),
         )
 
     def ensure_runtime_dirs(self) -> list[Path]:

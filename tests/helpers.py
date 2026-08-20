@@ -40,6 +40,7 @@ class TestHome:
         "AI_MEMORY_DIR",
         "AI_SKILLS_DIR",
         "ZCORE_KNOWLEDGE_DB",
+        "ZCORE_KNOWLEDGE_HEALTH_MANIFEST",
         "KITCLAW_LLM_API_KEY",
         "ZCORE_LLM_API_KEY",
     )

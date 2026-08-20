@@ -22,7 +22,7 @@ Claude Code, Gemini CLI, Codex CLI — each one is powerful, but they share the 
 **Z-Core is the ultimate evolution of KitClaw (V2).** It is an all-in-one CLI that provides the missing infrastructure layer for your local AI agents:
 
 - 👻 **Ghost Agent** — autonomous LLM backend that thinks between sessions (the soul of Z-Core)
-- 🧠 **Three-Layer Memory** — L1 identity, L2 topic whiteboards, and an **optional built-in RAG engine** for L3 semantic retrieval
+- 🧠 **Three-Layer Memory** — L1 identity, candidate-only L2 admission, and a read-only L3 health bridge; the optional built-in RAG remains a legacy compatibility path
 - 🔄 **Sessions** — lifecycle management, pause/resume, cross-agent handoff
 - 📋 **Context** — token analysis, automatic safe compaction
 - 🔧 **Skill Ecosystem** — **Bundles 17 curated core skills**, orchestrating them with intelligent multi-layer routing
@@ -72,7 +72,7 @@ zcore setup all
 zcore session start --project my-app --agent claude
 # → Session started: 802718d8b3f4
 
-# 4. Work normally... then end session (auto-saves context + memories)
+# 4. Work normally... then end the session (saves context + creates reviewable candidates)
 zcore session end --session-id 802718d8b3f4 --messages messages.json
 
 # 5. Search across all past sessions
@@ -114,7 +114,7 @@ Z-Core is a **stateless CLI** — no daemon, no background process. Each invocat
 
 Z-Core's engines handle memory, sessions, and skills. But **Ghost Agent** is what makes it *autonomous*.
 
-Ghost Agent is a cheap LLM backend that runs **between** your sessions — it compacts long conversations, extracts decisions and facts, and triages memories by confidence. It's the reason Z-Core can maintain persistent context without you manually curating anything.
+Ghost Agent is a cheap LLM backend that runs **between** your sessions — it compacts long conversations, extracts decisions and facts, and triages candidate memories by confidence. Automatic extraction does not admit L2 or L3 data: an explicit write or pending confirmation is required.
 
 ```
   You close Claude Code
@@ -199,8 +199,9 @@ zcore session pause / resume / handoff
 # Memory & Knowledge (L2/L3)
 zcore memory search --query "keyword"
 zcore memory write "important fact" --topic <topic>
-zcore knowledge index             # requires zcore[rag]
-zcore knowledge search            # hybrid semantic retrieval
+zcore knowledge health --json     # read the external provider health manifest
+zcore knowledge search            # legacy optional-RAG compatibility path
+zcore knowledge index             # legacy writer; blocked by external_readonly
 
 # Skills & Plugins (MCP)
 zcore skill list --available      # view the 17 bundled core skills
@@ -254,7 +255,11 @@ fallback_on_failure = true        # Degrade to heuristic on API failure
 redact_before_send = true         # Auto-redact secrets before LLM calls
 
 [memory]
-auto_extract = true               # Auto-extract on session end
+auto_extract = true               # Auto-extract candidates on session end
+
+[knowledge]
+provider = "external_readonly"    # Reads health only; never owns the L3 index
+health_manifest_path = ""         # External, versioned health-manifest path
 
 [context]
 auto_compact = true               # Auto-compact when context overflows
@@ -358,6 +363,7 @@ python -m unittest discover tests -q    # Quick check
 | [Governance](v2/design/governance.md) | Permission rules and hooks |
 | [Context Engine](v2/design/context-engine.md) | Token analysis and compaction |
 | [CLI Design](v2/design/cli.md) | Command interface specification |
+| [Knowledge Governance](docs/knowledge-governance.md) | Admission freeze, external-readonly health, and watcher rollout boundary |
 | [Ghost Agent Deep Review](v2/design/ghost-agent-deep-review.md) | 10-dimension architecture audit |
 | [Release Notes 0.2.0](docs/release-0.2.0.md) | Standalone extraction baseline |
 
@@ -403,10 +409,10 @@ A single `pip install zcore` is now everything you need. You no longer need to c
 As your AI toolchain grows, you might have the following architectural questions:
 
 **Q1: I mostly use GUI-based Agents with innate memory (e.g., Antigravity Desktop, Cursor). Do I still need Z-Core?**
-**Absolutely.** Z-Core acts as your **"Standardized Orchestrator & Heavy Database"** (SOP backend). Even though graphical LLMs are smart, they are prone to hallucinations and skipped steps when executing extremely long build tasks or refactoring dozens of files. Because Z-Core provides robust, validated components, your GUI agent can dispatch commands piece by piece to the `Z-Core Skill Library` in the background without losing logical tracking. Furthermore, when your desktop AI needs to search for needles in a haystack across your project, it still relies on `zcore knowledge` as a frictionless, zero-dependency RAG engine middleware.
+**Yes, when the agent can invoke explicit local commands.** Z-Core provides validated CLI components for session state, candidate extraction, and governed retrieval health. It does not invisibly intercept every GUI or agent request. `zcore knowledge health` reports the state of an external, owner-managed corpus; a healthy result is required before a future governed retrieval gate can use that corpus.
 
 **Q2: Do I have to manually type `zcore session start/end` every time I begin working to log my state?**
-**No.** The hallmark of Z-Core is its "invisible orchestration." Once you run `zcore setup all`, Z-Core deeply hooks into your Claude / Gemini / Codex configuration systems. When you give natural language instructions to your AI, they will **automatically spin up sandboxes and extract context in the background**, seamlessly discarding overhead and archiving memory when done. The explicit CLI commands documented here are merely APIs exposed for developers to intervene or perform "emergency surgery" during edge cases.
+`zcore setup all` installs managed guidance, but it does not guarantee hidden interception of every GUI or agent request. When a session workflow invokes extraction, Z-Core creates reviewable candidates; L2 admission still requires `zcore memory write` or `zcore memory pending --confirm`. The documented CLI commands are the reliable integration surface.
 
 **Q3: My stack includes OpenClaw (gateway bridging engine) or Hermes (message bus daemon). Why not integrate them into Z-Core to create a massive all-in-one suite?**
 **Strict separation of concerns.**

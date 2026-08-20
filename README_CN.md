@@ -69,14 +69,14 @@ zcore setup all
 zcore session start --project my-app --agent claude
 # → Session started: 802718d8b3f4
 
-# 4. 正常工作...结束后自动保存上下文和记忆
+# 4. 正常工作...结束后保存上下文，并生成可审核的记忆候选
 zcore session end --session-id 802718d8b3f4 --messages messages.json
 
 # 5. 搜索所有历史会话
 zcore memory search --query "数据库选型" --json
 ```
 
-搞定。你的 Agent 现在有持久记忆了。
+完成后会保留上下文，并把提取结果放入可审核的候选队列；明确确认后才成为持久 L2 记忆。
 
 ---
 
@@ -111,7 +111,7 @@ Z-Core 是**无状态 CLI** — 没有守护进程，没有后台服务。每次
 
 Z-Core 的引擎负责记忆、会话和技能。但 **Ghost Agent** 才是让它*自主*运转的核心。
 
-Ghost Agent 是一个廉价 LLM 后端，在你的**会话之间**运行 — 压缩长对话、提取决策和事实、按置信度分流记忆。这就是 Z-Core 能在你不手动维护的情况下保持持久上下文的原因。
+Ghost Agent 是一个廉价 LLM 后端，在你的**会话之间**运行 — 压缩长对话、提取决策和事实，并按置信度整理候选记忆。自动提取不会直接写入 L2 或 L3；必须显式写入或确认 pending 候选。
 
 ```
   你关掉 Claude Code
@@ -196,8 +196,9 @@ zcore session pause / resume / handoff
 # 记忆与知识 (L2/L3)
 zcore memory search --query "关键词"
 zcore memory write "重要事实" --topic <主题>
-zcore knowledge index             # 需要 zcore[rag]
-zcore knowledge search            # 混合语义检索
+zcore knowledge health --json     # 读取外部 provider 的健康清单
+zcore knowledge search            # legacy optional-RAG 兼容路径
+zcore knowledge index             # legacy 写入器；external_readonly 下被阻止
 
 # 技能与插件 (Skills / MCP)
 zcore skill list --available      # 列出内置的 17 个核心功能
@@ -244,7 +245,11 @@ fallback_on_failure = true        # API 失败时降级为启发式模式
 redact_before_send = true         # 发送前自动脱敏
 
 [memory]
-auto_extract = true               # 会话结束时自动提取记忆
+auto_extract = true               # 会话结束时自动提取候选项
+
+[knowledge]
+provider = "external_readonly"    # 只读健康状态，不拥有 L3 索引
+health_manifest_path = ""         # 外部版本化 health manifest 路径
 
 [context]
 auto_compact = true               # 上下文超限时自动压缩
@@ -387,10 +392,10 @@ Z-Core 在完全保留并内置了前代所有核心 Skill 和知识库（RAG）
 随着你的工具栈不断演进，你可能会有以下架构疑问：
 
 **Q1：我平时主要用自带原生记忆的图形化 Agent（如 Antigravity 桌面端等），还需要 Z-Core 吗？**
-**绝对需要。** Z-Core 在这里充当的是你的**“标准化工兵与重型数据库”**（SOP底座）。图形化大模型虽然聪明，但执行超长构建任务或修改数十个文件时容易“产生幻觉”漏步骤。由于 Z-Core 提供强制的标准组件校验，你的桌面端 AI 能够在后台按部就班分片下发调用命令给 `Z-Core Skill 库` 进行执行而不至于逻辑崩盘。同时，桌面端 AI 需要极速在项目中“大海捞针”时，依然需要借调 `zcore knowledge` 提供的本地 0 依赖 RAG 搜索引擎作为基础中间件。
+**可以，但前提是 Agent 能调用显式的本地命令。** Z-Core 提供会话状态、候选提取和受治理检索健康度的 CLI 组件；它不会隐式拦截每一种 GUI 或 Agent 请求。`zcore knowledge health` 报告外部 owner 管理的 corpus 状态，未来的受治理检索 gate 只能在该 corpus 健康时使用它。
 
 **Q2：开始每次开发工作时，我都得手敲 `zcore session start/end` 来记考勤吗？**
-**不需要。** Z-Core 特色正是“极度无感”。只要你执行过一次 `zcore setup all`，Z-Core 便已深度嵌入了你的 Claude / Gemini / Codex 配置系统。当你向 AI 们下达自然语言时，它们都会**在后台自动起挂沙箱、提取上下文**，用完即焚并归档。写在文档里的 CLI 指令，是暴露给开发者在智障卡壳或断电时能进控制台做“紧急手术”的 API 接口集。
+`zcore setup all` 会写入托管指引，但不会保证拦截每一种 GUI 或 Agent 请求。会话工作流触发提取时，Z-Core 只产生可审核候选；L2 入库仍需 `zcore memory write` 或 `zcore memory pending --confirm` 明确确认。文档中的 CLI 命令是可靠的集成接口。
 
 **Q3：我的开发群组里还有 OpenClaw（通用网关对接引擎）或 Hermes（消息节点总线），为什么不把它们一并收编进 Z-Core 变成大全家桶？**
 **为了严格的微服务架构隔离隔离 (Separation of Concerns)。**

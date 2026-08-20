@@ -11,6 +11,7 @@ def test_runtime_paths_follow_home(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.delenv("ZCORE_HOME", raising=False)
     monkeypatch.delenv("KITCLAW_HOME", raising=False)
+    monkeypatch.delenv("ZCORE_KNOWLEDGE_HEALTH_MANIFEST", raising=False)
     monkeypatch.setenv("AI_MEMORY_DIR", str(home / ".ai-memory"))
     monkeypatch.setenv("AI_SKILLS_DIR", str(home / ".ai-skills"))
 
@@ -18,6 +19,7 @@ def test_runtime_paths_follow_home(tmp_path, monkeypatch):
 
     assert paths.base_dir == home / ".zcore"
     assert paths.memory_dir == home / ".ai-memory"
+    assert paths.knowledge_health_manifest_path == home / ".zcore" / "knowledge-health.json"
 
 
 def test_legacy_script_resolves_from_ai_skills(tmp_path, monkeypatch):

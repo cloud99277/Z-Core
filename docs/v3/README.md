@@ -84,3 +84,17 @@ V3 构思文档的原始出处：
 | `v2/pm/reviews/V3-Initial-PM-Review.md` | 原位保留 |
 | `v2/rfcs/003~005` | 原位保留 |
 | `v2/design/{product-strategy,hermes-as-runtime,market-validation}.md` | 原位保留 |
+
+## Knowledge Governance Remediation
+
+The 2026-08-07 governance remediation is tracked independently from the V3.1
+session-search milestone. Its current scope is `0A -> 0B -> 0C`: candidate-only
+automatic memory extraction, an `external_readonly` knowledge-health provider, a
+versioned manifest contract, and a repository-only watcher audit rehearsal.
+
+L3 Markdown and its external index owner remain outside the V3 runtime's write
+authority. A live watcher switch is deliberately not part of this track and needs a
+separate approval after an atomic-generation, manifest, backup, and rollback review.
+
+See [Knowledge Governance](../knowledge-governance.md) and
+[`pm/knowledge-governance-remediation-plan-2026-08-06.md`](../../pm/knowledge-governance-remediation-plan-2026-08-06.md).

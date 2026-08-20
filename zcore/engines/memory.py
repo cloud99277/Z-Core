@@ -547,8 +547,6 @@ class MemoryEngine:
         return entries
 
     def _admit_entries(self, entries: list[MemoryEntry]) -> ExtractionResult:
-        auto_threshold = float(get_nested(self.config, "memory_extraction", "auto_admit_threshold", default=0.8))
-        pending_threshold = float(get_nested(self.config, "memory_extraction", "pending_threshold", default=0.5))
         existing = self.store.all_entries()
         pending = self.list_pending()
         result = ExtractionResult(entries=entries)
@@ -559,16 +557,9 @@ class MemoryEngine:
             if self.dedup(normalized, existing) or self.dedup(normalized, pending_entries):
                 result.discarded += 1
                 continue
-            if normalized.confidence >= auto_threshold:
-                self.store.write_entry(normalized)
-                existing.append(normalized)
-                result.admitted += 1
-                continue
-            if normalized.confidence >= pending_threshold:
-                pending.append(normalized.to_dict())
-                result.pending += 1
-                continue
-            result.discarded += 1
+            # Phase 0A has no confidence or provider bypass for automatic entries.
+            pending.append(normalized.to_dict())
+            result.pending += 1
 
         self._write_pending(pending)
         return result

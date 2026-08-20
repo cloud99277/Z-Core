@@ -20,6 +20,12 @@ from zcore.engines.context import ContextEngine
 from zcore.engines.ghost_agent import GhostAgent
 from zcore.engines.governance import PermissionDeniedError, PermissionEngine, resolve_ask_behavior
 from zcore.engines.harvester import HarvesterEngine
+from zcore.engines.knowledge import (
+    KnowledgeHealthEngine,
+    KnowledgeWriteFrozenError,
+    assert_knowledge_index_write_allowed,
+    knowledge_provider,
+)
 from zcore.engines.mcp import McpEngine
 from zcore.engines.memory import MemoryEngine
 from zcore.engines.observability import ObservabilityEngine
@@ -89,6 +95,9 @@ def _build_parser() -> argparse.ArgumentParser:
     knowledge_search.add_argument("--query", required=True)
     knowledge_search.add_argument("--limit", type=int, default=10)
     knowledge_search.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    knowledge_health = knowledge_subparsers.add_parser("health", help="Report external knowledge index health")
+    knowledge_health.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     knowledge_index = knowledge_subparsers.add_parser("index", help="Build or refresh the knowledge index")
     knowledge_index.add_argument("--path")
@@ -717,6 +726,19 @@ def _main_impl(argv: list[str] | None = None) -> int:
 
     if args.command == "knowledge":
         config = load_config(paths)
+        if args.knowledge_command == "health":
+            payload = KnowledgeHealthEngine(paths, config=config).health().to_dict()
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print("Knowledge Health")
+                print(f"  Provider: {payload['provider']}")
+                print(f"  Status: {payload['status']}")
+                print(f"  Freshness: {payload['freshness']}")
+                for warning in payload["warnings"]:
+                    print(f"  Warning: {warning}")
+            return 0
+
         if args.knowledge_command == "search":
             try:
                 from zcore.rag import search_knowledge
@@ -747,6 +769,21 @@ def _main_impl(argv: list[str] | None = None) -> int:
             return 0
 
         if args.knowledge_command == "index":
+            try:
+                assert_knowledge_index_write_allowed(config)
+            except KnowledgeWriteFrozenError as exc:
+                payload = {
+                    "ok": False,
+                    "provider": knowledge_provider(config),
+                    "status": "failed",
+                    "error": str(exc),
+                }
+                if args.json:
+                    print(json.dumps(payload, ensure_ascii=False))
+                else:
+                    print(payload["error"], file=sys.stderr)
+                return 1
+
             source_dir = _resolve_knowledge_source(paths, config, args.path)
             if not source_dir:
                 payload = {

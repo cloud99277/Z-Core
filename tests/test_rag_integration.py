@@ -62,6 +62,15 @@ class RagIntegrationTests(unittest.TestCase):
     @unittest.skipIf(not HAS_LANCEDB, "lancedb not installed")
     def test_knowledge_index_requires_path_or_config(self) -> None:
         with TestHome() as ctx:
+            init_proc = run_zcore("init", "--json", home=ctx.home)
+            self.assertEqual(init_proc.returncode, 0, init_proc.stderr)
+            config_path = ctx.home / ".zcore" / "config.toml"
+            config_path.write_text(
+                config_path.read_text(encoding="utf-8").replace(
+                    'provider = "external_readonly"', 'provider = "local"'
+                ),
+                encoding="utf-8",
+            )
             proc = run_zcore("knowledge", "index", "--json", home=ctx.home)
         self.assertEqual(proc.returncode, 1)
         payload = json.loads(proc.stdout)
