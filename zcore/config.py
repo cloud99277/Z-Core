@@ -12,6 +12,16 @@ from zcore.runtime import RuntimePaths
 from zcore.utils.filelock import FileLock
 
 
+def _escape_toml_string(value: str) -> str:
+    """Escape a value for use inside a TOML basic string.
+
+    Windows paths contain backslashes, which TOML treats as escape
+    introducers (``\\A`` is not a valid escape), so an unescaped path makes
+    the generated config unparseable by ``tomllib``.
+    """
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
 def render_default_config(paths: RuntimePaths) -> str:
     return "\n".join(
         [
@@ -78,9 +88,9 @@ def render_default_config(paths: RuntimePaths) -> str:
             "health_reports = false",
             "",
             "[paths]",
-            f'memory_dir = "{paths.memory_dir}"',
-            f'skills_dir = "{paths.skills_dir}"',
-            f'knowledge_db = "{paths.knowledge_db_path}"',
+            f'memory_dir = "{_escape_toml_string(paths.memory_dir.as_posix())}"',
+            f'skills_dir = "{_escape_toml_string(paths.skills_dir.as_posix())}"',
+            f'knowledge_db = "{_escape_toml_string(paths.knowledge_db_path.as_posix())}"',
             "",
         ]
     ) + "\n"
@@ -165,7 +175,9 @@ def set_config_value(paths: RuntimePaths, dotted_key: str, raw_value: str) -> di
         addition = f"[{section}]\n{key} = {rendered_value}\n"
         text = text.rstrip() + "\n\n" + addition
     elif line_re.search(section_body):
-        new_body = line_re.sub(rf"\1{rendered_value}", section_body)
+        # Use a callable replacement: backslashes in the rendered value would
+        # otherwise be interpreted as re.sub replacement escapes and get eaten.
+        new_body = line_re.sub(lambda match: f"{match.group(1)}{rendered_value}", section_body)
         text = _replace_section_body(text, section, new_body)
     else:
         updated_body = section_body.rstrip() + f"\n{key} = {rendered_value}\n"
@@ -240,7 +252,7 @@ def _render_toml_value(raw_value: str) -> str:
         return "true" if value else "false"
     if isinstance(value, (int, float)):
         return str(value)
-    escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
+    escaped = _escape_toml_string(str(value))
     return f'"{escaped}"'
 
 
