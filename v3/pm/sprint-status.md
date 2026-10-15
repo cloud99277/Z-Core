@@ -1,11 +1,12 @@
 # Sprint 状态 — V3.1 启动
 
-> **Status note (2026-08-20)**: This is the historical V3.1 launch record.
+> **Status note (2026-08-23)**: This is the historical V3.1 launch record.
 > Current evidence and convergence status are tracked in `Current-State.md` and
-> `pm/status-snapshots/2026-08-20-s0-baseline.md`. G0A-G0C were committed as
-> `094803b`; M5 was committed as `bd0a767`; M6 was committed as `3a712c9`.
-> M7 is blocked on a desensitized Gemini inner-history format fixture or explicit
-> source-read approval; M8 remains planned.
+> the current `v3/develop` HEAD is `95e2cac`. G0A-G0C were committed as
+> `094803b`; M5 as `bd0a767`; M6 as `3a712c9`. M7 remains
+> `blocked_by_evidence`: no Gemini source read or adapter implementation occurred.
+> M8 is an uncommitted `tests_verified` candidate, not a release or deployment;
+> post-ingest automatic indexing remains deferred to V3.2.
 
 > **上次更新**: 2026-04-29
 > **当前阶段**: V3.1 Sprint 启动，M5（OpenClaw Adapter）即将派发

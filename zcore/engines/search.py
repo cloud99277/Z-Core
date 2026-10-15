@@ -6,6 +6,7 @@ import time
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
+from zcore.engines.search_index import SearchIndex, SearchIndexBuildError, SearchIndexCandidate
 from zcore.models.search import SearchHit, SearchResult
 from zcore.runtime import RuntimePaths
 
@@ -26,6 +27,36 @@ class SearchEngine:
         started = time.perf_counter()
         terms = [term.casefold() for term in query.split() if term.strip()]
         bounded_limit = max(0, limit)
+        if terms and all(len(term) >= 3 for term in terms):
+            indexed = self._search_index(
+                query,
+                source=source,
+                project=project,
+                bounded_limit=bounded_limit,
+                terms=terms,
+                started=started,
+            )
+            if indexed is not None:
+                return indexed
+        return self._search_legacy(
+            query,
+            source=source,
+            project=project,
+            bounded_limit=bounded_limit,
+            terms=terms,
+            started=started,
+        )
+
+    def _search_legacy(
+        self,
+        query: str,
+        *,
+        source: str | None,
+        project: str | None,
+        bounded_limit: int,
+        terms: list[str],
+        started: float,
+    ) -> SearchResult:
         hits: list[SearchHit] = []
         searched_sessions = 0
         searched_harvested = 0
@@ -70,17 +101,119 @@ class SearchEngine:
             elapsed_ms=elapsed_ms,
         )
 
+    def _search_index(
+        self,
+        query: str,
+        *,
+        source: str | None,
+        project: str | None,
+        bounded_limit: int,
+        terms: list[str],
+        started: float,
+    ) -> SearchResult | None:
+        index = SearchIndex(self.paths)
+        lookup = index.find_candidates(terms, source=source, project=project)
+        if lookup is None:
+            return None
+
+        hits: list[SearchHit] = []
+        for candidate in lookup.candidates:
+            loaded = self._load_index_candidate(candidate)
+            if loaded is None:
+                return None
+            payload, texts = loaded
+            canonical_source = candidate.source
+            canonical_session_id = (
+                str(payload.get("session_id", ""))
+                if canonical_source == "session"
+                else self._harvested_session_id(payload)
+            )
+            canonical_project = str(payload.get("project", ""))
+            canonical_started_at = str(payload.get("started_at", ""))
+            if (
+                canonical_source != candidate.source
+                or canonical_session_id != candidate.session_id
+                or canonical_project != candidate.project
+                or canonical_started_at != candidate.started_at
+                or (source is not None and canonical_source != source)
+                or (project and canonical_project != project)
+            ):
+                return None
+            hit = self._match_record(
+                source=canonical_source,
+                session_id=canonical_session_id,
+                project=canonical_project,
+                started_at=canonical_started_at,
+                texts=texts,
+                terms=terms,
+            )
+            if hit is not None:
+                hits.append(hit)
+
+        hits.sort(key=lambda hit: hit.started_at, reverse=True)
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        return SearchResult(
+            query=query,
+            total_hits=len(hits),
+            hits=hits[:bounded_limit],
+            searched_sessions=lookup.searched_sessions,
+            searched_harvested=lookup.searched_harvested,
+            elapsed_ms=elapsed_ms,
+        )
+
+    def _load_index_candidate(
+        self, candidate: SearchIndexCandidate
+    ) -> tuple[dict[str, object], list[str]] | None:
+        parts = Path(candidate.source_ref).parts
+        if candidate.source == "session":
+            valid_ref = len(parts) == 3 and parts[0] == "sessions" and parts[2] == "meta.json"
+        else:
+            valid_ref = (
+                candidate.source == "harvested"
+                and len(parts) == 3
+                and parts[0] == "harvested"
+                and parts[2].endswith(".json")
+            )
+        if not valid_ref or Path(candidate.source_ref).is_absolute() or ".." in parts:
+            return None
+        source_path = self.paths.base_dir.joinpath(*parts)
+        safe_source_path = self._validated_source_path(source_path)
+        if safe_source_path is None:
+            return None
+        payload = self._load_json(safe_source_path)
+        if not isinstance(payload, dict):
+            return None
+        texts = [str(payload.get("summary", ""))]
+        if candidate.source == "session":
+            context_path = safe_source_path.parent / "context.json.gz"
+            if (context_path.exists() or context_path.is_symlink()) and self._validated_source_path(
+                context_path
+            ) is None:
+                return None
+            try:
+                texts.extend(self._native_context_texts(context_path, fail_closed=True))
+            except SearchIndexBuildError:
+                return None
+        else:
+            messages = payload.get("messages", [])
+            if isinstance(messages, list):
+                texts.extend(self._message_contents(messages))
+        return payload, texts
+
     def _iter_native_sessions(self, *, project: str | None) -> Iterator[tuple[dict[str, object], list[str]]]:
         if not self.paths.sessions_dir.exists():
             return
         for meta_path in self.paths.sessions_dir.glob("*/meta.json"):
-            meta = self._load_json(meta_path)
+            safe_meta_path = self._validated_source_path(meta_path)
+            if safe_meta_path is None:
+                continue
+            meta = self._load_json(safe_meta_path)
             if not isinstance(meta, dict):
                 continue
             if project and meta.get("project") != project:
                 continue
             texts = [str(meta.get("summary", ""))]
-            texts.extend(self._native_context_texts(meta_path.parent / "context.json.gz"))
+            texts.extend(self._native_context_texts(safe_meta_path.parent / "context.json.gz"))
             yield meta, texts
 
     def _iter_harvested_sessions(self, *, project: str | None) -> Iterator[tuple[dict[str, object], list[str]]]:
@@ -88,7 +221,10 @@ class SearchEngine:
         if not harvest_dir.exists():
             return
         for session_path in harvest_dir.glob("*/*.json"):
-            payload = self._load_json(session_path)
+            safe_session_path = self._validated_source_path(session_path)
+            if safe_session_path is None:
+                continue
+            payload = self._load_json(safe_session_path)
             if not isinstance(payload, dict):
                 continue
             if project and payload.get("project") != project:
@@ -99,13 +235,22 @@ class SearchEngine:
                 texts.extend(self._message_contents(messages))
             yield payload, texts
 
-    def _native_context_texts(self, path: Path) -> list[str]:
-        if not path.exists():
+    def _native_context_texts(self, path: Path, *, fail_closed: bool = False) -> list[str]:
+        if not path.exists() and not path.is_symlink():
+            return []
+        safe_path = self._validated_source_path(path)
+        if safe_path is None:
+            if fail_closed:
+                raise SearchIndexBuildError("Search source could not be validated safely")
             return []
         try:
-            with gzip.open(path, "rt", encoding="utf-8") as handle:
-                payload = json.load(handle)
-        except (OSError, json.JSONDecodeError):
+            raw = SearchIndex(self.paths).read_source_bytes(safe_path)
+            payload = json.loads(gzip.decompress(raw).decode("utf-8"))
+        except SearchIndexBuildError:
+            if fail_closed:
+                raise
+            return []
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             return []
         if isinstance(payload, dict):
             messages = payload.get("messages", [])
@@ -164,11 +309,18 @@ class SearchEngine:
 
     def _load_json(self, path: Path) -> object:
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+            raw = SearchIndex(self.paths).read_source_bytes(path).decode("utf-8")
+            return json.loads(raw)
+        except (OSError, SearchIndexBuildError, UnicodeDecodeError, json.JSONDecodeError):
             return None
 
     def _harvested_session_id(self, payload: dict[str, object]) -> str:
         session_id = str(payload.get("source_session_id") or payload.get("session_id") or "")
         source = str(payload.get("source") or "")
         return f"{source}:{session_id}" if source and session_id else session_id
+
+    def _validated_source_path(self, path: Path) -> Path | None:
+        try:
+            return SearchIndex(self.paths).validate_source_path(path)
+        except SearchIndexBuildError:
+            return None

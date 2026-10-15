@@ -17,3 +17,5 @@ venv/
 *~
 .DS_Store
 Thumbs.db
+# Local memory dir accidentally created from a Windows path
+/D:\\AIdata\\mem/

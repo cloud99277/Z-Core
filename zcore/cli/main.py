@@ -31,6 +31,7 @@ from zcore.engines.memory import MemoryEngine
 from zcore.engines.observability import ObservabilityEngine
 from zcore.engines.router import SkillRouter
 from zcore.engines.search import SearchEngine
+from zcore.engines.search_index import SearchIndex
 from zcore.engines.session import SessionManager
 from zcore.engines.workflow import WorkflowEngine
 from zcore.models.memory import MemoryEntry
@@ -128,6 +129,11 @@ def _build_parser() -> argparse.ArgumentParser:
     migrate_parser = subparsers.add_parser("migrate", help="Migrate whiteboard.json into topic files")
     migrate_parser.add_argument("--dry-run", action="store_true")
     migrate_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+
+    index_parser = subparsers.add_parser("index", help="Search index commands")
+    index_subparsers = index_parser.add_subparsers(dest="index_command", required=True)
+    index_rebuild = index_subparsers.add_parser("rebuild", help="Rebuild the session search index")
+    index_rebuild.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
 
     session_parser = subparsers.add_parser("session", help="Session lifecycle commands")
     session_subparsers = session_parser.add_subparsers(dest="session_command", required=True)
@@ -823,6 +829,18 @@ def _main_impl(argv: list[str] | None = None) -> int:
                     f"Indexed {payload['indexed_chunks']} chunks from {payload['indexed_files']} files into "
                     f"{payload['db_path']}"
                 )
+            return 0
+
+    if args.command == "index":
+        if args.index_command == "rebuild":
+            payload = SearchIndex(paths).rebuild()
+            if args.json:
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print("Search index rebuilt")
+                print(f"  Index: {payload['index_path']}")
+                print(f"  Records: {payload['records']}")
+                print(f"  Text rows: {payload['text_rows']}")
             return 0
 
     if args.command == "session":

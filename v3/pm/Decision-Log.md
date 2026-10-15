@@ -309,3 +309,30 @@ independent and session-derived.
   entered this commit.
 
 ---
+
+## [2026-08-23] Keep M8 Rebuild-Only with Legacy-Compatible Fallback
+
+**Decision:** Keep M8 manual through `zcore index rebuild`. Prefer a fresh
+contentless SQLite FTS5 trigram index, but fall back to the legacy scan with a
+compatible output schema and matching behavior whenever the index is missing,
+corrupt, wrong-version, stale, or unsafe. Defer the post-ingest automatic hook
+to V3.2.
+
+**Reason:** A rebuild-only candidate is testable and reversible without coupling
+Harvester persistence to a sensitive derivative index. Fail-closed source
+validation must not make search unavailable.
+
+**Impact:** The uncommitted `tests_verified` candidate indexes only
+`.zcore/sessions` and already-local `.zcore/harvested`, with `O_NOFOLLOW`
+descriptor reads and database mode `0600`. Raw adapter sources, L2/L3, and
+external knowledge are excluded. Contentless FTS is not encryption or secure
+erase.
+
+**Compatibility assessment:**
+- Fields, hits, counts, snippets, filters, ordering, and matching semantics remain
+  legacy-compatible; `elapsed_ms` is backend-specific.
+- No real sessions or `~/.zcore` were touched by verification.
+- This entry records candidate evidence only; it is not a commit, release, or
+  deployment claim.
+
+---
